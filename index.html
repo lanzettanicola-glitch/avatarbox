@@ -498,7 +498,7 @@
 
                         <div class="input-group">
                             <label>Nome Avatar</label>
-                            <input type="text" id="avatarNameInput" value="Nexus">
+                            <input type="text" id="avatarNameInput" value="Nexus" oninput="aggiornaAnteprimaPreview()">
                         </div>
 
                         <div class="input-group">
@@ -524,20 +524,16 @@
 
                         <div class="input-group">
                             <label>Modello IA</label>
-                            <select id="modelSelect">
-                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
-                                <option value="llama-3.1-8b-instant" selected>Llama 3.1 8B (Groq Veloce)</option>
-                            </select>
+                            <select id="modelSelect"></select>
                         </div>
 
                         <div class="input-group full-width">
-                            <label id="apiKeyLabel">Inserisci API Key (es. Groq, OpenAI, ecc.)</label>
-                            <input type="password" id="apiKeyInput" placeholder="gsk_... o sk-...">
-                            <small style="color: var(--text-sub); margin-top: 2px;">La chiave viene salvata solo nel tuo browser (`localStorage`) e usata direttamente per le chiamate.</small>
+                            <label id="apiKeyLabel">Inserisci API Key</label>
+                            <input type="password" id="apiKeyInput" placeholder="gsk_... o sk-..." oninput="salvaconfigInTempoReale()">
                         </div>
 
                         <div class="input-group">
-                            <label>Voce Sintetica (4 Opzioni: 2F / 2M)</label>
+                            <label>Voce Sintetica (4 Opzioni)</label>
                             <select id="voiceSelect"></select>
                         </div>
 
@@ -608,7 +604,6 @@
     let isAppRunning = false;
     let stopGenerazioneFlag = false;
 
-    // Carica configurazione salvata se esiste
     const savedConfig = localStorage.getItem('avatarbox_cloud_config');
     if(savedConfig) {
         try {
@@ -748,8 +743,9 @@
     }
 
     window.aggiornaModelliDisponibili = function() {
-        const provider = document.getElementById('providerSelect').value;
+        const provider = document.getElementById('providerSelect')?.value || userConfig.provider;
         const modelSelect = document.getElementById('modelSelect');
+        if(!modelSelect) return;
         modelSelect.innerHTML = "";
 
         let opzioni = [];
@@ -761,7 +757,7 @@
             ];
         } else if(provider === 'openai') {
             opzioni = [
-                {val: "gpt-4o-mini", label: "GPT-4o Mini (Consigliato/Veloce)"},
+                {val: "gpt-4o-mini", label: "GPT-4o Mini (Consigliato)"},
                 {val: "gpt-4o", label: "GPT-4o (Avanzato)"}
             ];
         } else if(provider === 'openrouter') {
@@ -772,8 +768,8 @@
             ];
         } else if(provider === 'gemini') {
             opzioni = [
-                {val: "gemini-2.5-flash", label: "Gemini Flash"},
-                {val: "gemini-2.5-pro", label: "Gemini Pro"}
+                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash"},
+                {val: "gemini-1.5-pro", label: "Gemini 1.5 Pro"}
             ];
         }
 
@@ -783,6 +779,7 @@
             el.text = opt.label;
             modelSelect.add(el);
         });
+        if(userConfig.model) modelSelect.value = userConfig.model;
     };
 
     window.aggiornaAnteprimaPreview = function() {
@@ -805,6 +802,11 @@
             activeGroup = costruisciAvatarGroup(userConfig);
             activeScene.add(activeGroup);
         }
+    };
+
+    window.salvaconfigInTempoReale = function() {
+        userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || "";
+        localStorage.setItem('avatarbox_cloud_config', JSON.stringify(userConfig));
     };
 
     window.aggiornaVociTTS = function() {
@@ -949,7 +951,7 @@
 
                     <div class="input-group">
                         <label>Nome Avatar</label>
-                        <input type="text" id="avatarNameInput" value="${userConfig.name}">
+                        <input type="text" id="avatarNameInput" value="${userConfig.name}" oninput="aggiornaAnteprimaPreview()">
                     </div>
 
                     <div class="input-group">
@@ -980,7 +982,7 @@
 
                     <div class="input-group full-width">
                         <label>API Key</label>
-                        <input type="password" id="apiKeyInput" value="${userConfig.apiKey}">
+                        <input type="password" id="apiKeyInput" value="${userConfig.apiKey}" oninput="salvaconfigInTempoReale()">
                     </div>
 
                     <div class="input-group">
@@ -1026,7 +1028,6 @@
         `;
 
         aggiornaModelliDisponibili();
-        document.getElementById('modelSelect').value = userConfig.model;
         initAvatarRenderer('preview-canvas-container');
         aggiornaVociTTS();
     };
@@ -1226,7 +1227,7 @@
         } else if(userConfig.provider === 'openrouter') {
             endpoint = "https://openrouter.ai/api/v1/chat/completions";
         } else if(userConfig.provider === 'gemini') {
-            endpoint = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
+            endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
         }
 
         try {
@@ -1303,20 +1304,35 @@
 
     window.onload = () => {
         if(savedConfig) {
-            document.getElementById('avatarNameInput').value = userConfig.name;
-            document.getElementById('langSelect').value = userConfig.lang;
-            document.getElementById('providerSelect').value = userConfig.provider;
+            const avInput = document.getElementById('avatarNameInput');
+            if(avInput) avInput.value = userConfig.name;
+            const langSel = document.getElementById('langSelect');
+            if(langSel) langSel.value = userConfig.lang;
+            const provSel = document.getElementById('providerSelect');
+            if(provSel) provSel.value = userConfig.provider;
             aggiornaModelliDisponibili();
-            document.getElementById('modelSelect').value = userConfig.model;
-            document.getElementById('apiKeyInput').value = userConfig.apiKey;
-            document.getElementById('skinColorInput').value = userConfig.skin;
-            document.getElementById('hairColorInput').value = userConfig.hair;
-            document.getElementById('eyeColorInput').value = userConfig.eyes;
-            document.getElementById('lipColorInput').value = userConfig.lips;
-            document.getElementById('gadgetGlasses').checked = userConfig.gadgets.glasses;
-            document.getElementById('gadgetVisor').checked = userConfig.gadgets.visor;
-            document.getElementById('gadgetHeadphones').checked = userConfig.gadgets.headphones;
-            document.getElementById('gadgetCap').checked = userConfig.gadgets.cap;
+            const modSel = document.getElementById('modelSelect');
+            if(modSel) modSel.value = userConfig.model;
+            const apiInp = document.getElementById('apiKeyInput');
+            if(apiInp) apiInp.value = userConfig.apiKey;
+            
+            const skinInp = document.getElementById('skinColorInput');
+            if(skinInp) skinInp.value = userConfig.skin;
+            const hairInp = document.getElementById('hairColorInput');
+            if(hairInp) hairInp.value = userConfig.hair;
+            const eyeInp = document.getElementById('eyeColorInput');
+            if(eyeInp) eyeInp.value = userConfig.eyes;
+            const lipInp = document.getElementById('lipColorInput');
+            if(lipInp) lipInp.value = userConfig.lips;
+
+            const g1 = document.getElementById('gadgetGlasses');
+            if(g1) g1.checked = userConfig.gadgets.glasses;
+            const g2 = document.getElementById('gadgetVisor');
+            if(g2) g2.checked = userConfig.gadgets.visor;
+            const g3 = document.getElementById('gadgetHeadphones');
+            if(g3) g3.checked = userConfig.gadgets.headphones;
+            const g4 = document.getElementById('gadgetCap');
+            if(g4) g4.checked = userConfig.gadgets.cap;
         } else {
             aggiornaModelliDisponibili();
         }
