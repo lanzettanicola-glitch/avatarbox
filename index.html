@@ -3,61 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AvatarBox — Free AI 3D Hub</title>
+<title>AvatarBox — Ultimate AI & 3D Hub</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg: #07090e;
-  --panel: rgba(15, 20, 30, 0.95);
-  --border: rgba(255, 255, 255, 0.1);
+  --bg: #030508;
+  --panel: rgba(12, 16, 24, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
   --accent: #10b981;
-  --accent-glow: rgba(16, 185, 129, 0.2);
+  --accent-glow: rgba(16, 185, 129, 0.25);
   --text: #f3f4f6;
   --sub: #9ca3af;
-  --user-bg: rgba(16, 185, 129, 0.15);
+  --user-bg: rgba(16, 185, 129, 0.18);
   --danger: #ef4444;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
+  padding: 0.;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: var(--bg);
+  background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08), transparent 70%);
   color: var(--text);
   font-family: 'Inter', -apple-system, sans-serif;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 #app {
   width: 100vw;
   height: 100vh;
-  max-width: 1000px;
+  max-width: 1050px;
   max-height: 750px;
   background: var(--panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
 }
 
 @media (min-width: 768px) {
-  #app { border-radius: 16px; }
+  #app { border-radius: 18px; }
 }
 
 header {
-  background: rgba(10, 14, 22, 0.9);
-  padding: 12px 16px;
+  background: rgba(6, 9, 14, 0.9);
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -67,236 +70,207 @@ header {
   flex-shrink: 0;
 }
 
-.logo { font-weight: 700; color: #fff; font-size: 15px; }
+.logo { font-weight: 700; color: #fff; font-size: 16px; display: flex; align-items: center; gap: 8px; }
 .logo span { color: var(--accent); }
 
-.status { font-size: 11px; color: var(--sub); display: flex; align-items: center; gap: 6px; }
-.status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+.status { font-size: 11.5px; color: var(--sub); display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
 
-.layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+.main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-#sidebar {
-  width: 240px;
-  background: #0a0d14;
-  border-right: 1px solid var(--border);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 10;
-  transition: transform 0.3s ease;
-}
-
-@media (max-width: 767px) {
-  #sidebar {
-    position: absolute; top:0; bottom:0; left:0;
-    transform: translateX(-100%);
-    box-shadow: 10px 0 25px rgba(0,0,0,0.8);
-  }
-  #sidebar.open { transform: translateX(0); }
-}
-
-.sidebar-title { font-size: 11px; text-transform: uppercase; color: var(--sub); font-family: 'Fira Code', monospace; }
-
-.history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-.history-item {
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--sub);
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.main { flex: 1; display: flex; flex-direction: column; padding: 14px; min-width: 0; overflow: hidden; }
-
-.setup-container {
-  max-width: 580px;
+/* Setup & Configuration View */
+.setup-screen {
+  flex: 1;
+  max-width: 650px;
   margin: 0 auto;
-  width: 100%;
-  height: 100%;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 20px;
-}
-
-.setup-title { font-size: 18px; text-align: center; }
-.setup-sub { font-size: 12px; color: var(--sub); text-align: center; }
-
-.preview-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
   gap: 16px;
 }
 
-.avatar-box {
-  width: 90px; height: 90px;
-  border-radius: 12px;
-  background: #000;
+.setup-title { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.5px; }
+.setup-desc { font-size: 12.5px; color: var(--sub); text-align: center; margin-top: -8px; }
+
+.card-preview {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatar-container-3d {
+  width: 100px; height: 100px;
+  background: #05070a;
   border: 2px solid var(--accent);
+  border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 0 20px var(--accent-glow);
 }
 
-.form-group {
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 550px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+.field-group {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(0,0,0,0.2);
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  gap: 6px;
 }
+.field-full { grid-column: 1 / -1; }
 
-.form-group label { font-size: 11px; color: var(--sub); font-weight: 600; }
+label { font-size: 11.5px; font-weight: 500; color: var(--sub); }
 
-input[type="text"], select, textarea {
-  background: #0c1018;
+input[type="text"], select {
+  background: #080b12;
   border: 1px solid var(--border);
   color: #fff;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
   width: 100%;
   outline: none;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-
-.grid-2 { display: grid; grid-template-columns: 1fr; gap: 10px; }
-@media (min-width: 500px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+input:focus, select:focus { border-color: var(--accent); }
 
 .btn {
   background: var(--accent);
   color: #fff;
   border: none;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px var(--accent-glow);
 }
-.btn:active { opacity: 0.8; }
-.btn-secondary { background: rgba(255,255,255,0.08); border: 1px solid var(--border); }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-.chat-window {
+/* Chat View */
+.chat-screen {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  padding: 16px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-box {
   flex: 1;
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
-.chat-msg { display: flex; gap: 10px; width: 100%; }
-.chat-avatar { width: 38px; height: 38px; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; overflow: hidden; }
+.msg-row { display: flex; gap: 12px; width: 100%; }
+.msg-avatar { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: #05070a; flex-shrink: 0; overflow: hidden; }
 
-.chat-bubble {
+.msg-bubble {
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.45;
-  max-width: 82%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 80%;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 
-.chat-msg.user { justify-content: flex-end; }
-.chat-msg.user .chat-bubble { background: var(--user-bg); border-color: rgba(16,185,129,0.3); }
+.msg-row.user { justify-content: flex-end; }
+.msg-row.user .msg-bubble { background: var(--user-bg); border-color: rgba(16,185,129,0.3); }
 
-.controls { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
-textarea#user-input { height: 44px; resize: none; padding: 10px; }
-
-.menu-toggle { display: none; background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; }
-@media (max-width: 767px) { .menu-toggle { display: block; } }
+.chat-controls { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+textarea#user-input {
+  flex: 1;
+  background: #080b12;
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  height: 48px;
+  resize: none;
+  outline: none;
+}
+textarea#user-input:focus { border-color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div id="app">
   <header>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-      <div class="logo">Avatar<span>Box</span></div>
-    </div>
-    <div class="status">
-      <span class="status-dot"></span> Free Mode Active
-    </div>
+    <div class="logo">Avatar<span>Box</span></div>
+    <div class="status"><span class="status-dot"></span> Pronto</div>
   </header>
 
-  <div class="layout">
-    <div id="sidebar">
-      <div class="sidebar-title">Cronologia</div>
-      <button class="btn btn-secondary" onclick="resetChat()" style="padding: 6px; font-size: 11px;">+ Nuova Chat</button>
-      <div class="history-list" id="history"></div>
-    </div>
+  <div class="main-layout">
+    <!-- SETUP VIEW -->
+    <div class="setup-screen" id="setup-view">
+      <div class="setup-title">Configura il tuo Avatar 3D</div>
+      <div class="setup-desc">Scegli il nome, l'aspetto e chatta senza limiti con i modelli liberi.</div>
 
-    <div class="main">
-      <div class="setup-container" id="setup-view">
-        <div class="setup-title">Avatar 3D & AI Hub</div>
-        <div class="setup-sub">Nessun costo, nessuna API Key, zero errori.</div>
-
-        <div class="preview-card">
-          <div class="avatar-box" id="preview-render"></div>
-          <div>
-            <div style="font-weight: 600; font-size: 14px;" id="preview-name">Nexus</div>
-            <div style="font-size: 11px; color: var(--sub);">Avatar 3D Reattivo</div>
-          </div>
+      <div class="card-preview">
+        <div class="avatar-container-3d" id="preview-3d"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 15px;" id="preview-name-label">Nexus</div>
+          <div style="font-size: 11.5px; color: var(--sub);">Anteprima in tempo reale</div>
         </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Nome Avatar</label>
-            <input type="text" id="avatar-name" value="Nexus" oninput="updatePreview()">
-          </div>
-
-          <div class="form-group">
-            <label>Modello IA Libero</label>
-            <select id="ai-model">
-              <option value="qwen">Qwen 2.5 72B (Veloce)</option>
-              <option value="llama">Llama 3.3 70B (Avanzato)</option>
-              <option value="deepseek">DeepSeek V3 (Logico)</option>
-              <option value="mistral">Mistral Small (Standard)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Colore Pelle</label>
-            <input type="color" id="col-skin" value="#e0a96d" onchange="updatePreview()">
-          </div>
-          <div class="form-group">
-            <label>Colore Capelli</label>
-            <input type="color" id="col-hair" value="#2d3748" onchange="updatePreview()">
-          </div>
-        </div>
-
-        <button class="btn" onclick="startChat()">Avvia Conversazione</button>
       </div>
 
-      <div class="setup-container" id="chat-view" style="display: none; max-width: 100%;">
-        <div class="chat-window" id="chat-box"></div>
-        <div class="controls">
-          <textarea id="user-input" placeholder="Scrivi un messaggio..."></textarea>
-          <button class="btn" onclick="sendMessage()" style="height: 44px; width: 80px;">Invia</button>
+      <div class="form-grid">
+        <div class="field-group">
+          <label>Nome Avatar</label>
+          <input type="text" id="avatar-name" value="Nexus" oninput="updatePreview()">
         </div>
+
+        <div class="field-group">
+          <label>Modello IA Gratuito</label>
+          <select id="ai-model">
+            <option value="qwen">Qwen 2.5 72B (Consigliato)</option>
+            <option value="llama">Llama 3.3 70B</option>
+            <option value="deepseek">DeepSeek V3</option>
+            <option value="mistral">Mistral Small</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label>Colore Pelle</label>
+          <input type="color" id="col-skin" value="#e0a96d" onchange="updatePreview()" style="height:38px; border:none; background:none; cursor:pointer;">
+        </div>
+
+        <div class="field-group">
+          <label>Colore Capelli</label>
+          <input type="color" id="col-hair" value="#2d3748" onchange="updatePreview()" style="height:38px; border:none; background:none; cursor:pointer;">
+        </div>
+      </div>
+
+      <button class="btn" onclick="startApp()" style="margin-top: 10px;">Avvia AvatarBox</button>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div class="chat-screen" id="chat-view">
+      <div class="chat-box" id="chat-box"></div>
+      <div class="chat-controls">
+        <textarea id="user-input" placeholder="Scrivi un messaggio..."></textarea>
+        <button class="btn" onclick="sendMessage()" style="height: 48px; width: 90px;">Invia</button>
       </div>
     </div>
   </div>
@@ -304,13 +278,9 @@ textarea#user-input { height: 44px; resize: none; padding: 10px; }
 
 <script>
 let cfg = { name: "Nexus", model: "qwen", skin: "#e0a96d", hair: "#2d3748" };
-let history = [];
+let chatHistory = [];
 let scene, camera, renderer, headGroup;
 let isSpeaking = false;
-
-function toggleMenu() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
 
 function init3D(containerId) {
   const container = document.getElementById(containerId);
@@ -319,39 +289,39 @@ function init3D(containerId) {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-  camera.position.z = 3.5;
+  camera.position.z = 3.6;
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth || 90, container.clientHeight || 90);
+  renderer.setSize(container.clientWidth || 100, container.clientHeight || 100);
   container.appendChild(renderer.domElement);
 
-  const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(2, 2, 5);
+  const light = new THREE.DirectionalLight(0xffffff, 1.2);
+  light.position.set(3, 3, 5);
   scene.add(light);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 
-  buildAvatar();
+  buildAvatarModel();
 
   function animate() {
     requestAnimationFrame(animate);
     if (headGroup) {
-      headGroup.rotation.y += isSpeaking ? 0.04 : 0.008;
-      headGroup.rotation.x = Math.sin(Date.now() * 0.002) * 0.08;
+      headGroup.rotation.y += isSpeaking ? 0.045 : 0.01;
+      headGroup.rotation.x = Math.sin(Date.now() * 0.0025) * 0.1;
     }
     renderer.render(scene, camera);
   }
   animate();
 }
 
-function buildAvatar() {
+function buildAvatarModel() {
   if (headGroup) scene.remove(headGroup);
   headGroup = new THREE.Group();
 
-  const skinMat = new THREE.MeshStandardMaterial({ color: cfg.skin });
-  const hairMat = new THREE.MeshStandardMaterial({ color: cfg.hair });
+  const skinMat = new THREE.MeshStandardMaterial({ color: cfg.skin, roughness: 0.4 });
+  const hairMat = new THREE.MeshStandardMaterial({ color: cfg.hair, roughness: 0.6 });
 
   const head = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), skinMat);
-  const hair = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.5, 1.65), hairMat);
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.55, 1.65), hairMat);
   hair.position.y = 0.65;
 
   headGroup.add(head);
@@ -363,30 +333,23 @@ function updatePreview() {
   cfg.name = document.getElementById('avatar-name').value || "Nexus";
   cfg.skin = document.getElementById('col-skin').value;
   cfg.hair = document.getElementById('col-hair').value;
-  document.getElementById('preview-name').innerText = cfg.name;
-  buildAvatar();
+  document.getElementById('preview-name-label').innerText = cfg.name;
+  buildAvatarModel();
 }
 
-function startChat() {
+function startApp() {
   cfg.model = document.getElementById('ai-model').value;
   document.getElementById('setup-view').style.display = "none";
   document.getElementById('chat-view').style.display = "flex";
 
   const chatBox = document.getElementById('chat-box');
   chatBox.innerHTML = `
-    <div class="chat-msg">
-      <div class="chat-avatar" id="chat-3d-box"></div>
-      <div class="chat-bubble"><strong>${cfg.name}:</strong> Ciao! Sono pronto. Come posso aiutarti oggi?</div>
+    <div class="msg-row">
+      <div class="msg-avatar" id="chat-avatar-3d"></div>
+      <div class="msg-bubble"><strong>${cfg.name}:</strong> Ciao! Sono online e pronto a chattare con te.</div>
     </div>
   `;
-  init3D('chat-3d-box');
-}
-
-function resetChat() {
-  history = [];
-  document.getElementById('chat-view').style.display = "none";
-  document.getElementById('setup-view').style.display = "flex";
-  init3D('preview-render');
+  init3D('chat-avatar-3d');
 }
 
 async function sendMessage() {
@@ -398,18 +361,18 @@ async function sendMessage() {
   const chatBox = document.getElementById('chat-box');
 
   chatBox.innerHTML += `
-    <div class="chat-msg user">
-      <div class="chat-bubble">${escapeHtml(text)}</div>
+    <div class="msg-row user">
+      <div class="msg-bubble">${escapeHtml(text)}</div>
     </div>
   `;
 
-  history.push({ role: "user", content: text });
+  chatHistory.push({ role: "user", content: text });
 
   const replyId = "reply-" + Date.now();
   chatBox.innerHTML += `
-    <div class="chat-msg">
-      <div class="chat-avatar"></div>
-      <div class="chat-bubble" id="${replyId}"><em>Scrittura in corso...</em></div>
+    <div class="msg-row">
+      <div class="msg-avatar"></div>
+      <div class="msg-bubble" id="${replyId}"><em>Sto elaborando...</em></div>
     </div>
   `;
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -421,29 +384,29 @@ async function sendMessage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages: [
-          { role: "system", content: `Ti chiami ${cfg.name}. Rispondi sempre in italiano in modo chiaro, amichevole e breve.` },
-          ...history
+          { role: "system", content: `Ti chiami ${cfg.name}. Rispondi sempre in italiano in modo amichevole, chiaro e conciso.` },
+          ...chatHistory
         ],
         model: cfg.model
       })
     });
 
-    if (!response.ok) throw new Error("Errore di connessione");
+    if (!response.ok) throw new Error("Errore di rete");
 
     const reply = await response.text();
-    history.push({ role: "assistant", content: reply });
+    chatHistory.push({ role: "assistant", content: reply });
 
     document.getElementById(replyId).innerHTML = `<strong>${cfg.name}:</strong> ${escapeHtml(reply)}`;
-    speakText(reply);
+    speakResponse(reply);
   } catch (err) {
-    document.getElementById(replyId).innerHTML = `<span style="color:var(--danger)">Errore di ricezione. Riprova.</span>`;
+    document.getElementById(replyId).innerHTML = `<span style="color:var(--danger)">Errore di connessione. Riprova tra un attimo.</span>`;
   } finally {
     isSpeaking = false;
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 }
 
-function speakText(txt) {
+function speakResponse(txt) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(txt);
@@ -458,7 +421,7 @@ function escapeHtml(string) {
 }
 
 window.onload = () => {
-  init3D('preview-render');
+  init3D('preview-3d');
 };
 </script>
 </body>
