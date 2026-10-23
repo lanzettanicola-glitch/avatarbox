@@ -19,9 +19,14 @@ header{background:rgba(10,14,20,.85);padding:14px 20px;font-size:13px;font-weigh
 .icon-btn{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--tx);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;height:auto}
 .icon-btn:hover{background:rgba(16,185,129,.2);border-color:var(--ac)}
 .dot{width:8px;height:8px;background:#10b981;border-radius:50%;display:inline-block;box-shadow:0 0 12px #10b981;margin-right:6px}
-#app-layout{display:flex;flex:1;overflow:hidden}
-#sidebar{width:240px;background:rgba(8,11,16,.7);border-right:1px solid var(--bd);display:none;flex-direction:column;padding:14px;gap:10px;flex-shrink:0}
-@media(min-width:768px){#sidebar{display:flex}}
+#app-layout{display:flex;flex:1;overflow:hidden;position:relative}
+#sidebar{width:240px;background:rgba(8,11,16,.7);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:14px;gap:10px;flex-shrink:0}
+.menu-btn{display:none}
+@media(max-width:767px){#sidebar{position:absolute;z-index:5;top:0;bottom:0;left:0;transform:translateX(-100%);transition:transform .2s;background:#080b10}#sidebar.open{transform:none}.menu-btn{display:inline-block}}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.message-bubble pre{background:#05070a;padding:8px;border-radius:6px;overflow-x:auto;white-space:pre;margin:6px 0}
+.message-bubble code{font-family:'Fira Code',monospace;font-size:12px}
+.hi{display:flex;gap:4px}.hi .history-item{flex:1}.hi .x{height:auto;padding:4px 8px;background:rgba(239,68,68,.15);color:#f87171}
 #sidebar h3{font-size:11.5px;color:var(--sub);text-transform:uppercase;margin:0 0 4px}
 .history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
 .history-item{background:rgba(255,255,255,.03);border:1px solid var(--bd);padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -69,7 +74,7 @@ button:hover{background:var(--ac2)}
 <body>
 <div id="game-container">
 <header>
-  <div class="brand">Avatar<span>Box</span></div>
+  <div class="brand"><button class="icon-btn menu-btn" id="menuBtn" aria-label="Cronologia">☰</button>Avatar<span>Box</span></div>
   <div class="header-actions">
     <button class="icon-btn" id="settingsBtn" style="display:none">⚙️ Impostazioni</button>
     <div id="status" style="color:var(--sub);font-size:11px"><span class="dot"></span>Pronto</div>
@@ -80,7 +85,7 @@ button:hover{background:var(--ac2)}
     <h3>💬 Cronologia Chat</h3>
     <button id="newChatBtn" style="height:32px;font-size:11.5px">+ Nuova Chat</button>
     <div class="history-list" id="historyList"></div>
-    <button class="clr" id="clearBtn">Pulisci Storico</button>
+    <button class="clr" id="expBtn" style="background:rgba(255,255,255,.06);color:var(--tx);border-color:var(--bd)">Esporta chat</button><button class="clr" id="clearBtn">Pulisci Storico</button>
   </div>
   <div id="screen"><div id="main-content"></div></div>
 </div>
@@ -128,15 +133,20 @@ function saveCfg() {
 }
 
 /* ---------- Avatar 3D ---------- */
-function faceTexture(c) {
-  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
-  const x = cv.getContext('2d'); x.fillStyle = "#0d1117"; x.fillRect(0,0,128,128);
+function drawFace(x, c, open, blink) {
+  x.fillStyle = "#0d1117"; x.fillRect(0,0,128,128);
   const P = [[0,0,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,2,2,2,2,2,2,2,2,1,1],
     [1,2,2,2,2,2,2,2,2,2,2,1],[1,2,4,3,2,2,2,2,4,3,2,1],[1,2,2,2,2,2,2,2,2,2,2,1],[1,2,2,2,2,1,1,2,2,2,2,1],
     [0,2,2,2,6,6,6,6,2,2,2,0],[0,2,2,2,2,2,2,2,2,2,2,0],[0,0,2,2,2,2,2,2,2,2,0,0],[0,0,0,1,1,1,1,1,1,0,0,0]];
-  const colors = {1:c.hair,2:c.skin,3:c.eyes,4:"#ffffff",6:c.lips}, s = 128/12;
-  P.forEach((row,r) => row.forEach((v,k) => { if(v){ x.fillStyle = colors[v]; x.fillRect(k*s, r*s, s, s); } }));
-  const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; return t;
+  if (blink) P[5][2] = P[5][3] = P[5][8] = P[5][9] = 2;
+  if (open) { [4,5,6,7].forEach(k => P[9][k] = 6); P[8][5] = P[8][6] = 7; }
+  const col = {1:c.hair,2:c.skin,3:c.eyes,4:"#ffffff",6:c.lips,7:"#3b0a14"}, z = 128/12;
+  P.forEach((row,r) => row.forEach((v,k) => { if (v) { x.fillStyle = col[v]; x.fillRect(k*z, r*z, z, z); } }));
+}
+function faceTexture(c) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  drawFace(cv.getContext('2d'), c, false, false);
+  const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; t.userData.cv = cv; return t;
 }
 
 function buildAvatar(c) {
@@ -155,7 +165,7 @@ function buildAvatar(c) {
 function disposeRenderer() {
   if (animId) cancelAnimationFrame(animId);
   animId = null;
-  if (renderer) { renderer.dispose(); renderer = null; }
+  if (renderer) { renderer.dispose(); renderer.forceContextLoss(); renderer = null; }
   scene = camera = group = null;
 }
 
@@ -172,9 +182,14 @@ function initRenderer(id, size) {
   group = buildAvatar(cfg); scene.add(group);
   (function loop() {
     animId = requestAnimationFrame(loop);
+    if (document.hidden) return;
+    const t = Date.now();
     if (group) {
-      if (running) { group.rotation.y += speaking ? .035 : .008; group.rotation.x = Math.sin(Date.now()*.003)*.12; }
+      if (running) { group.rotation.y = Math.sin(t*.0008)*.25; group.rotation.x = Math.sin(t*.0012)*.06; }
       else group.rotation.y += .012;
+      const tx = group.children[0].material[4].map, u = tx.userData;
+      const open = speaking && Math.sin(t*.025) > 0, blink = t % 3600 < 130;
+      if (open !== u.o || blink !== u.b) { u.o = open; u.b = blink; drawFace(u.cv.getContext('2d'), cfg, open, blink); tx.needsUpdate = true; }
     }
     renderer.render(scene, camera);
   })();
@@ -188,7 +203,7 @@ function snapshotAvatar() {
     s.add(new THREE.AmbientLight(0xffffff,.9));
     const pl = new THREE.PointLight(0xffffff,1.2); pl.position.set(5,5,5); s.add(pl);
     s.add(buildAvatar(cfg)); r.render(s, cam);
-    avatarSnap = r.domElement.toDataURL('image/png'); r.dispose();
+    avatarSnap = r.domElement.toDataURL('image/png'); r.dispose(); r.forceContextLoss();
   } catch(e) { avatarSnap = ''; }
 }
 
@@ -286,19 +301,20 @@ function pickVoice() {
   cfg.voice = o.value; cfg.pitch = parseFloat(o.dataset.pitch || 1); cfg.voiceLabel = o.text;
 }
 
-function stopSpeech() { if ('speechSynthesis' in window) speechSynthesis.cancel(); speaking = false; }
-
-function speak(text) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/[*#_~`]/g, ''));
+let pend = 0, convo = false;
+function stopSpeech() { if ('speechSynthesis' in window) speechSynthesis.cancel(); pend = 0; speaking = false; }
+function say(text) {
+  text = text.replace(/```[\s\S]*?```/g, ' ').replace(/[*#_~`]/g, '').trim();
+  if (!text || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
   u.lang = LOCALE[cfg.lang] || 'it-IT'; u.pitch = cfg.pitch || 1;
   const v = speechSynthesis.getVoices().find(v => v.name === cfg.voice);
   if (v) u.voice = v;
-  speaking = true;
-  u.onend = u.onerror = () => { speaking = false; };
+  pend++; speaking = true;
+  u.onend = u.onerror = () => { pend = Math.max(0, pend-1); if (!pend) { speaking = false; if (convo && !stopFlag) listen(); } };
   speechSynthesis.speak(u);
 }
+function speak(text) { stopSpeech(); say(text); }
 
 /* ---------- Cronologia ---------- */
 function loadChats() { try { return JSON.parse(localStorage.getItem(CHATS_KEY) || '[]'); } catch(e) { return []; } }
@@ -307,18 +323,23 @@ function renderSidebar() {
   const list = $('historyList'), chats = loadChats(); list.innerHTML = "";
   if (!chats.length) { const d = document.createElement('div'); d.style.cssText = "font-size:11px;color:var(--sub);text-align:center;padding:10px"; d.textContent = "Nessuna chat salvata"; list.appendChild(d); return; }
   chats.forEach(c => {
+    const row = document.createElement('div'); row.className = 'hi';
     const d = document.createElement('div'); d.className = 'history-item';
-    d.textContent = `${c.name} (${new Date(c.id).toLocaleDateString()})`;
+    d.textContent = c.title || c.name; d.title = "Doppio clic per rinominare";
     d.onclick = () => restoreChat(c.id);
-    list.appendChild(d);
+    d.ondblclick = () => { const n = prompt("Nuovo titolo:", d.textContent); if (n && n.trim()) { const l = loadChats(), k = l.find(z => z.id === c.id); k.title = n.trim().slice(0,40); localStorage.setItem(CHATS_KEY, JSON.stringify(l)); renderSidebar(); } };
+    const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.setAttribute('aria-label', 'Elimina chat');
+    x.onclick = () => { localStorage.setItem(CHATS_KEY, JSON.stringify(loadChats().filter(z => z.id !== c.id))); renderSidebar(); };
+    row.append(d, x); list.appendChild(row);
   });
 }
 
 function saveChat() {
   if (!currentChatId) currentChatId = Date.now();
-  const {apiKey, ...config} = cfg;
-  const data = {id: currentChatId, name: cfg.name, config, messages: chatHistory};
-  const list = loadChats(), i = list.findIndex(c => c.id === currentChatId);
+  const {apiKey, ...config} = cfg, list = loadChats(), i = list.findIndex(c => c.id === currentChatId);
+  const first = chatHistory.find(m => m.role === 'user');
+  const title = (i >= 0 && list[i].title) || (first ? first.content.slice(0,30) : cfg.name);
+  const data = {id: currentChatId, name: cfg.name, title, config, messages: chatHistory};
   if (i >= 0) list[i] = data; else list.unshift(data);
   try { localStorage.setItem(CHATS_KEY, JSON.stringify(list)); } catch(e) {}
   renderSidebar();
@@ -328,6 +349,7 @@ function restoreChat(id) {
   const c = loadChats().find(c => c.id === id); if (!c) return;
   currentChatId = c.id; chatHistory = c.messages;
   cfg = {...cfg, ...c.config, gadgets: {...DEF.gadgets, ...c.config.gadgets}};
+  $('sidebar').classList.remove('open');
   openChat(true);
 }
 
@@ -345,11 +367,11 @@ function openChat(restore) {
   $('settingsBtn').style.display = 'inline-block';
   $('main-content').innerHTML = `
     <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name)}</strong><br><span style="font-size:11px;color:var(--sub)">Modalità: ${cfg.provider === 'free' ? 'Modelli Liberi' : cfg.provider.toUpperCase()}</span></div></div>
-    <div class="chat" id="chatBox"></div>
-    <div class="banner">📢 <strong>AvatarBox</strong> — ${esc(cfg.model)}</div>
+    <div class="chat" id="chatBox" role="log" aria-live="polite"></div>
+    
     <div class="input-row">
-      <button class="mic" id="micBtn" title="Dettatura Vocale">🎤</button>
-      <textarea id="userInput"></textarea>
+      <button class="mic" id="micBtn" title="Dettatura vocale" aria-label="Dettatura vocale">🎤</button><button class="mic" id="convoBtn" title="Modalità conversazione" aria-label="Modalità conversazione">🎧</button>
+      <textarea id="userInput" aria-label="Messaggio"></textarea>
       <button id="sendBtn">Invia</button><button class="stop" id="stopBtn">Interrompi</button>
     </div>`;
   $('liveBox').style.cssText = "width:56px;height:56px";
@@ -369,12 +391,23 @@ function openChat(restore) {
 
   $('sendBtn').onclick = sendMessage;
   $('stopBtn').onclick = () => { stopFlag = true; if (abortCtl) abortCtl.abort(); stopSpeech(); };
-  $('micBtn').onclick = toggleMic;
+  $('micBtn').onclick = toggleMic; $('convoBtn').onclick = toggleConvo;
   $('userInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
   saveChat();
 }
 
+function trimmed() {
+  const [sys, ...rest] = chatHistory, out = []; let n = 0;
+  for (let i = rest.length - 1; i >= 0; i--) { n += rest[i].content.length; if (n > 12000 && out.length) break; out.unshift(rest[i]); }
+  return [sys, ...out];
+}
+
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function md(t) {
+  return esc(t).replace(/```\w*\n?([\s\S]*?)```/g, '<pre><code>$1</code></pre>').replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/^[-*] (.+)$/gm, '• $1');
+}
 
 function addMsg(role, text) {
   const row = document.createElement('div'); row.className = 'message-row' + (role === 'user' ? ' me' : '');
@@ -388,24 +421,36 @@ function addMsg(role, text) {
 
 function setBubble(b, role, text, withTTS) {
   b.textContent = "";
-  const s = document.createElement('strong'); s.textContent = (role === 'user' ? 'Tu' : cfg.name) + ': ';
-  b.append(s, text);
-  if (withTTS) {
-    const t = document.createElement('button'); t.className = 'tts'; t.textContent = '🔊 Ascolta';
-    t.onclick = () => speak(text); b.appendChild(t);
+  const s = document.createElement('strong'); s.textContent = (role === 'user' ? 'Tu' : cfg.name) + ': '; b.appendChild(s);
+  const c = document.createElement('span');
+  if (role === 'user') c.textContent = text;
+  else {
+    c.innerHTML = md(text);
+    c.querySelectorAll('pre').forEach(p => { const k = document.createElement('button'); k.className = 'tts'; k.textContent = '📋 Copia'; k.onclick = () => navigator.clipboard && navigator.clipboard.writeText(p.textContent); p.after(k); });
   }
+  b.appendChild(c);
+  if (withTTS) { const t = document.createElement('button'); t.className = 'tts'; t.textContent = '🔊 Ascolta'; t.onclick = () => speak(text); b.appendChild(t); }
 }
 
-function toggleMic() {
+function listen() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { alert("Riconoscimento vocale non supportato da questo browser."); return; }
-  const btn = $('micBtn');
-  if (recognition) { recognition.stop(); return; }
+  if (!SR) { alert("Riconoscimento vocale non supportato da questo browser."); convo = false; return; }
+  if (recognition) return;
+  let got = false;
   recognition = new SR(); recognition.lang = LOCALE[cfg.lang] || 'it-IT';
-  recognition.onstart = () => btn.classList.add('on');
-  recognition.onresult = e => { $('userInput').value = e.results[0][0].transcript; };
-  recognition.onerror = recognition.onend = () => { btn.classList.remove('on'); recognition = null; };
+  recognition.onstart = () => $('micBtn') && $('micBtn').classList.add('on');
+  recognition.onresult = e => { got = true; $('userInput').value = e.results[0][0].transcript; if (convo) sendMessage(); };
+  recognition.onerror = recognition.onend = () => {
+    if ($('micBtn')) $('micBtn').classList.remove('on');
+    recognition = null;
+    if (convo && !got && !abortCtl && !speaking) setTimeout(() => convo && listen(), 600);
+  };
   recognition.start();
+}
+function toggleMic() { if (recognition) recognition.stop(); else listen(); }
+function toggleConvo() {
+  convo = !convo; $('convoBtn').classList.toggle('on', convo);
+  if (convo) { stopFlag = false; listen(); } else if (recognition) recognition.stop();
 }
 
 async function sendMessage() {
@@ -421,22 +466,22 @@ async function sendMessage() {
 
   const headers = {"Content-Type":"application/json"};
   if (cfg.provider !== 'free') headers.Authorization = "Bearer " + cfg.apiKey;
-  let full = "";
+  let full = "", spoken = 0;
 
   const finish = () => {
     if (!full) full = "(Generazione interrotta)";
     chatHistory.push({role:"assistant", content:full});
     setBubble(bubble, 'assistant', full, true);
-    if (!stopFlag) speak(full);
+    if (!stopFlag) say(full.slice(spoken));
     saveChat();
   };
 
   try {
     const res = await fetch(ENDPOINTS[cfg.provider], {
       method:"POST", headers, signal: abortCtl.signal,
-      body: JSON.stringify({model: cfg.model, messages: chatHistory, stream: true})
+      body: JSON.stringify({model: cfg.model, messages: trimmed(), stream: true})
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0,300) || res.statusText}`);
+    if (!res.ok) { const er = new Error((await res.text()).slice(0,200) || res.statusText); er.status = res.status; throw er; }
     const reader = res.body.getReader(), dec = new TextDecoder("utf-8");
     let buf = "";
     while (true) {
@@ -451,6 +496,8 @@ async function sendMessage() {
         if (d === "[DONE]") continue;
         try {
           full += JSON.parse(d).choices?.[0]?.delta?.content || "";
+          const m = full.slice(spoken).match(/^[\s\S]*[.!?…\n](?=\s|$)/);
+          if (m && m[0].length > 20 && (full.slice(0, spoken + m[0].length).split('```').length - 1) % 2 === 0) { say(m[0]); spoken += m[0].length; }
           setBubble(bubble, 'assistant', full);
           $('chatBox').scrollTop = $('chatBox').scrollHeight;
         } catch(e) {}
@@ -461,8 +508,14 @@ async function sendMessage() {
     if (e.name === 'AbortError') finish();
     else {
       chatHistory.pop();
-      bubble.textContent = ""; const s = document.createElement('span'); s.style.color = "#f87171";
-      s.textContent = "Errore API: " + e.message; bubble.appendChild(s);
+      const msg = e.status === 401 || e.status === 403 ? "Chiave API non valida o mancante."
+        : e.status === 429 ? "Troppe richieste: attendi un momento o cambia modello."
+        : e.status ? `Errore API (${e.status}): ${e.message}` : "Rete non raggiungibile o servizio bloccato.";
+      bubble.textContent = "";
+      const s = document.createElement('span'); s.style.color = "#f87171"; s.textContent = msg; bubble.appendChild(s);
+      const rt = document.createElement('button'); rt.className = 'tts'; rt.textContent = '↻ Riprova';
+      rt.onclick = () => { const row = bubble.parentElement; row.previousSibling && row.previousSibling.remove(); row.remove(); $('userInput').value = text; sendMessage(); };
+      bubble.appendChild(rt);
     }
   } finally {
     abortCtl = null;
@@ -472,7 +525,9 @@ async function sendMessage() {
 
 /* ---------- Avvio ---------- */
 $('settingsBtn').onclick = () => renderSetup(true);
-$('newChatBtn').onclick = () => { currentChatId = null; chatHistory = []; renderSetup(false); };
+$('menuBtn').onclick = () => $('sidebar').classList.toggle('open');
+$('expBtn').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(loadChats(), null, 2)], {type:'application/json'})); a.download = 'avatarbox-chat.json'; a.click(); };
+$('newChatBtn').onclick = () => { $('sidebar').classList.remove('open'); convo = false; currentChatId = null; chatHistory = []; renderSetup(false); };
 $('clearBtn').onclick = () => { if (confirm("Vuoi cancellare tutte le chat salvate in locale?")) { localStorage.removeItem(CHATS_KEY); renderSidebar(); } };
 window.onload = () => {
   renderSetup(false); renderSidebar();
