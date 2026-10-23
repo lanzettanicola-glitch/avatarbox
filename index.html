@@ -286,10 +286,10 @@
                             <label>Piattaforma / Fornitore IA</label>
                             <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
                                 <option value="free">Modelli Liberi (Nessuna API Key necessaria)</option>
+                                <option value="gemini">Google Gemini (Ultime versioni)</option>
                                 <option value="groq">Groq (Ultra Veloce - Richiede Key)</option>
                                 <option value="openrouter">OpenRouter (Tutti i modelli - Richiede Key)</option>
                                 <option value="openai">OpenAI (GPT-4o - Richiede Key)</option>
-                                <option value="gemini">Google Gemini (Richiede Key)</option>
                             </select>
                         </div>
 
@@ -527,6 +527,13 @@
                 {val: "meta-llama/llama-3.1-8b-instruct:free", label: "Llama 3.1 8B Free (OpenRouter)"},
                 {val: "google/gemma-2-9b-it:free", label: "Gemma 2 9B Free (Google)"}
             ];
+        } else if(provider === 'gemini') {
+            opzioni = [
+                {val: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Ultimo / Consigliato)"},
+                {val: "gemini-4-argon", label: "Gemini 4 Argon (Top di gamma & Ragionamento)"},
+                {val: "gemini-3.1-pro", label: "Gemini 3.1 Pro"},
+                {val: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite"}
+            ];
         } else if(provider === 'groq') {
             opzioni = [
                 {val: "llama-3.1-8b-instant", label: "Llama 3.1 8B (Groq Ultra Veloce)"},
@@ -543,11 +550,6 @@
                 {val: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet (Anthropic)"},
                 {val: "deepseek/deepseek-chat", label: "DeepSeek V3 (Standard)"},
                 {val: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B"}
-            ];
-        } else if(provider === 'gemini') {
-            opzioni = [
-                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Google)"},
-                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash (Google)"}
             ];
         }
 
@@ -747,10 +749,10 @@
                         <label>Piattaforma / Fornitore IA</label>
                         <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
                             <option value="free" ${userConfig.provider==='free'?'selected':''}>Modelli Liberi (Senza API Key)</option>
+                            <option value="gemini" ${userConfig.provider==='gemini'?'selected':''}>Google Gemini</option>
                             <option value="groq" ${userConfig.provider==='groq'?'selected':''}>Groq</option>
                             <option value="openrouter" ${userConfig.provider==='openrouter'?'selected':''}>OpenRouter</option>
                             <option value="openai" ${userConfig.provider==='openai'?'selected':''}>OpenAI</option>
-                            <option value="gemini" ${userConfig.provider==='gemini'?'selected':''}>Google Gemini</option>
                         </select>
                     </div>
 
