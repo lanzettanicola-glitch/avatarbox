@@ -56,7 +56,7 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         #game-container {
@@ -148,7 +148,6 @@
             position: relative;
         }
 
-        /* Sidebar Storico Chat con Scrollbar attiva */
         #sidebar {
             width: 240px;
             background: rgba(8, 11, 16, 0.7);
@@ -204,43 +203,44 @@
 
         #screen {
             flex: 1;
-            padding: 16px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             overflow: hidden;
         }
 
+        /* Schermata configurazione ottimizzata per lo scroll su iPhone/Mobile */
         .setup-screen {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             height: 100%;
             max-width: 560px;
             margin: 0 auto;
-            text-align: center;
+            text-align: left;
             gap: 12px;
             overflow-y: auto;
-            padding-right: 6px;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 8px 30px 4px;
         }
 
         .setup-screen h1 {
             color: #f9fafb;
-            font-size: 20px;
+            font-size: 18px;
             margin: 0;
+            text-align: center;
         }
 
         .setup-screen p {
             color: var(--text-sub);
-            font-size: 12px;
+            font-size: 11.5px;
             margin: 0;
+            text-align: center;
         }
 
         .config-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 10px;
-            text-align: left;
         }
 
         @media (min-width: 600px) {
@@ -322,7 +322,6 @@
             flex-shrink: 0;
         }
 
-        /* Contenitore Chat con Scrollbar dedicata */
         .chat-container {
             flex: 1;
             background: rgba(8, 11, 16, 0.7);
@@ -334,6 +333,7 @@
             flex-direction: column;
             gap: 12px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .message-row {
@@ -423,6 +423,7 @@
             transition: all 0.2s;
             font-size: 12.5px;
             height: 44px;
+            flex-shrink: 0;
         }
 
         button:hover { background-color: var(--accent-hover); }
@@ -480,7 +481,7 @@
     </header>
 
     <div id="app-layout">
-        <!-- Sidebar Storico Chat con Scrollbar -->
+        <!-- Sidebar Storico Chat -->
         <div id="sidebar">
             <h3>💬 Cronologia Chat</h3>
             <button onclick="nuovaChat()" style="padding: 6px; font-size: 11.5px; margin-bottom: 4px; height: 32px;">+ Nuova Chat</button>
@@ -489,7 +490,7 @@
         </div>
 
         <div id="screen">
-            <div id="main-content" style="height: 100%; display: flex; flex-direction: column;">
+            <div id="main-content" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
                 <div class="setup-screen" id="setupScreen">
                     <div>
                         <h1>Crea il tuo Avatar 3D</h1>
@@ -566,8 +567,8 @@
                         </div>
                     </div>
 
-                    <div>
-                        <button onclick="avviaCostruzioneIA()" style="width: 100%; height: 44px; margin-top: 4px;">Conferma & Avvia AvatarBox</button>
+                    <div style="margin-top: 6px; padding-bottom: 20px;">
+                        <button onclick="avviaCostruzioneIA()" style="width: 100%; height: 48px;">Conferma & Avvia AvatarBox</button>
                     </div>
                 </div>
             </div>
@@ -944,8 +945,8 @@
                     </div>
                 </div>
 
-                <div>
-                    <button onclick="riprendiChatDaImpostazioni()" style="width: 100%; height: 44px; margin-top: 4px;">Salva & Torna alla Chat</button>
+                <div style="margin-top: 6px; padding-bottom: 20px;">
+                    <button onclick="riprendiChatDaImpostazioni()" style="width: 100%; height: 48px;">Salva & Torna alla Chat</button>
                 </div>
             </div>
         `;
