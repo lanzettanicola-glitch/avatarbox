@@ -1,0 +1,20 @@
+{
+  "name": "avatarbox-3",
+  "version": "3.1.0",
+  "private": true,
+  "description": "AvatarBox: chat IA modulare con avatar 3D e confronto modelli",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^7.5.0"
+  }
+}
