@@ -209,7 +209,6 @@
             overflow: hidden;
         }
 
-        /* Schermata configurazione ottimizzata per lo scroll su iPhone/Mobile */
         .setup-screen {
             display: flex;
             flex-direction: column;
@@ -312,7 +311,7 @@
             border: 1px solid var(--panel-border);
         }
 
-        #preview-canvas-container, #chat-canvas-container {
+        .avatar-canvas-box {
             width: 75px;
             height: 75px;
             border-radius: 10px;
@@ -320,6 +319,9 @@
             border: 2px solid rgba(255,255,255,0.12);
             background: #0d1117;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .chat-container {
@@ -428,6 +430,12 @@
 
         button:hover { background-color: var(--accent-hover); }
 
+        .stop-btn {
+            background-color: #ef4444;
+            display: none;
+        }
+        .stop-btn:hover { background-color: #dc2626; }
+
         .mic-btn {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--panel-border);
@@ -481,7 +489,6 @@
     </header>
 
     <div id="app-layout">
-        <!-- Sidebar Storico Chat -->
         <div id="sidebar">
             <h3>💬 Cronologia Chat</h3>
             <button onclick="nuovaChat()" style="padding: 6px; font-size: 11.5px; margin-bottom: 4px; height: 32px;">+ Nuova Chat</button>
@@ -499,7 +506,7 @@
                     
                     <div class="config-grid">
                         <div class="preview-container">
-                            <div id="preview-canvas-container"></div>
+                            <div class="avatar-canvas-box" id="preview-canvas-container"></div>
                             <div style="font-size: 11.5px; text-align: left; color: var(--text-sub);">
                                 <strong style="color: #fff;">Anteprima Live 3D</strong><br>
                                 Gira in tempo reale.
@@ -594,11 +601,14 @@
     let chatsSaved = [];
     let currentChatId = null;
 
-    let chatRenderer, chatScene, chatCamera, chatGroup;
-    let previewRenderer, previewScene, previewCamera, previewGroup;
+    let activeRenderer = null;
+    let activeScene = null;
+    let activeCamera = null;
+    let activeGroup = null;
     let staParlando = false;
     let animFrameId = null;
     let isAppRunning = false;
+    let stopGenerazioneFlag = false;
 
     function creaTextureVolto(c) {
         const canvas = document.createElement('canvas');
@@ -691,32 +701,44 @@
         return group;
     }
 
-    function initPreview3D() {
-        const container = document.getElementById('preview-canvas-container');
+    function initAvatarRenderer(containerId) {
+        const container = document.getElementById(containerId);
         if(!container) return;
 
-        previewScene = new THREE.Scene();
-        previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        previewCamera.position.z = 3.6;
+        if(animFrameId) cancelAnimationFrame(animFrameId);
 
-        previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        previewRenderer.setSize(75, 75);
+        activeScene = new THREE.Scene();
+        activeCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+        activeCamera.position.z = 3.6;
+
+        activeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        activeRenderer.setSize(75, 75);
         container.innerHTML = "";
-        container.appendChild(previewRenderer.domElement);
+        container.appendChild(activeRenderer.domElement);
 
-        previewScene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        activeScene.add(new THREE.AmbientLight(0xffffff, 0.9));
         const pointLight = new THREE.PointLight(0xffffff, 1.2);
         pointLight.position.set(5, 5, 5);
-        previewScene.add(pointLight);
+        activeScene.add(pointLight);
 
-        aggiornaAnteprimaPreview();
-        
-        function loop() {
-            animFrameId = requestAnimationFrame(loop);
-            if(previewGroup) previewGroup.rotation.y += 0.012;
-            previewRenderer.render(previewScene, previewCamera);
+        activeGroup = costruisciAvatarGroup(userConfig);
+        activeScene.add(activeGroup);
+
+        function renderLoop() {
+            animFrameId = requestAnimationFrame(renderLoop);
+            if(activeGroup) {
+                if(isAppRunning) {
+                    activeGroup.rotation.y += staParlando ? 0.035 : 0.008;
+                    activeGroup.rotation.x = Math.sin(Date.now() * 0.003) * 0.12;
+                } else {
+                    activeGroup.rotation.y += 0.012;
+                }
+            }
+            if(activeRenderer && activeScene && activeCamera) {
+                activeRenderer.render(activeScene, activeCamera);
+            }
         }
-        loop();
+        renderLoop();
     }
 
     window.aggiornaAnteprimaPreview = function() {
@@ -734,9 +756,11 @@
             cap: document.getElementById('gadgetCap')?.checked || false
         };
 
-        if(previewGroup) previewScene.remove(previewGroup);
-        previewGroup = costruisciAvatarGroup(userConfig);
-        previewScene.add(previewGroup);
+        if(activeGroup && activeScene) {
+            activeScene.remove(activeGroup);
+            activeGroup = costruisciAvatarGroup(userConfig);
+            activeScene.add(activeGroup);
+        }
     };
 
     window.aggiornaVociTTS = function() {
@@ -872,7 +896,6 @@
     }
 
     window.apriImpostazioni = function() {
-        if(animFrameId) cancelAnimationFrame(animFrameId);
         isAppRunning = false;
         document.getElementById('settingsBtn').style.display = 'none';
 
@@ -886,7 +909,7 @@
                 
                 <div class="config-grid">
                     <div class="preview-container">
-                        <div id="preview-canvas-container"></div>
+                        <div class="avatar-canvas-box" id="preview-canvas-container"></div>
                         <div style="font-size: 11.5px; text-align: left; color: var(--text-sub);">
                             <strong style="color: #fff;">Anteprima Live 3D</strong><br>
                             Aggiornamento istantaneo.
@@ -951,7 +974,7 @@
             </div>
         `;
 
-        initPreview3D();
+        initAvatarRenderer('preview-canvas-container');
         aggiornaVociTTS();
     };
 
@@ -973,7 +996,6 @@
     };
 
     window.avviaCostruzioneIA = async function(isRestore = false) {
-        if(animFrameId) cancelAnimationFrame(animFrameId);
         isAppRunning = true;
         document.getElementById('settingsBtn').style.display = 'inline-block';
 
@@ -983,7 +1005,7 @@
         mainContent.innerHTML = `
             <div class="chat-container" id="chatBox">
                 <div class="message-row">
-                    <div id="chat-canvas-container"></div>
+                    <div class="avatar-canvas-box" id="chat-canvas-container"></div>
                     <div class="message-bubble" id="loading-msg">
                         <strong>Caricamento AvatarBox:</strong> Inizializzazione modello (${selectedModel}) via WebGPU...<br>
                         <div id="progress-bar-container"><div id="progress-bar"></div></div>
@@ -996,11 +1018,12 @@
                 <button class="mic-btn" id="micBtn" onclick="toggleMicrofono()" title="DettaturaVocale">🎤</button>
                 <textarea id="rispostaUtente" placeholder="Caricamento in corso..." disabled></textarea>
                 <button id="sendBtn" disabled>Invia</button>
+                <button id="stopBtn" class="stop-btn" onclick="interrompiGenerazione()">Interrompi</button>
             </div>
         `;
 
         document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>Inizializzazione IA...`;
-        initChat3D();
+        initAvatarRenderer('chat-canvas-container');
 
         const initProgressCallback = (progress) => {
             let percentage = Math.round(progress.progress * 100);
@@ -1035,13 +1058,13 @@
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = `
                 <div class="message-row">
-                    <div id="chat-canvas-container"></div>
+                    <div class="avatar-canvas-box" id="chat-canvas-container"></div>
                     <div class="message-bubble">
                         <strong>${userConfig.name}:</strong> Modello IA attivo in locale! Cronologia pronta.
                     </div>
                 </div>
             `;
-            initChat3D();
+            initAvatarRenderer('chat-canvas-container');
 
             if(isRestore) {
                 chatHistory.forEach(msg => {
@@ -1050,7 +1073,7 @@
                     } else if(msg.role === 'assistant') {
                         chatBox.innerHTML += `
                             <div class="message-row">
-                                <div id="chat-canvas-container"></div>
+                                <div class="avatar-canvas-box"></div>
                                 <div class="message-bubble">
                                     <strong>${userConfig.name}:</strong> ${msg.content}<br>
                                     <button class="tts-action-btn" onclick="faiParlareIA('${msg.content.replace(/'/g, "\\'")}')">🔊 Ascolta</button>
@@ -1076,42 +1099,10 @@
 
             salvaChatCorrente();
         } catch (err) {
-            document.getElementById('loading-msg').innerHTML = `<strong style="color: #f87171;">Errore WebGPU: ${err.message}</strong>`;
+            const loadingMsg = document.getElementById('loading-msg');
+            if(loadingMsg) loadingMsg.innerHTML = `<strong style="color: #f87171;">Errore WebGPU: ${err.message}</strong>`;
         }
     };
-
-    function initChat3D() {
-        const container = document.getElementById('chat-canvas-container');
-        if(!container) return;
-
-        chatScene = new THREE.Scene();
-        chatCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        chatCamera.position.z = 3.6;
-
-        chatRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        chatRenderer.setSize(75, 75);
-        container.innerHTML = "";
-        container.appendChild(chatRenderer.domElement);
-
-        chatScene.add(new THREE.AmbientLight(0xffffff, 0.9));
-        const pointLight = new THREE.PointLight(0xffffff, 1.2);
-        pointLight.position.set(5, 5, 5);
-        chatScene.add(pointLight);
-
-        chatGroup = costruisciAvatarGroup(userConfig);
-        chatScene.add(chatGroup);
-
-        function chatLoop() {
-            if(!isAppRunning) return;
-            requestAnimationFrame(chatLoop);
-            if(chatGroup) {
-                chatGroup.rotation.y += staParlando ? 0.035 : 0.008;
-                chatGroup.rotation.x = Math.sin(Date.now() * 0.003) * 0.12;
-            }
-            chatRenderer.render(chatScene, chatCamera);
-        }
-        chatLoop();
-    }
 
     window.faiParlareIA = function(testo) {
         if (!('speechSynthesis' in window)) return;
@@ -1156,26 +1147,16 @@
         recognition.lang = userConfig.lang === 'it' ? 'it-IT' : userConfig.lang === 'en' ? 'en-US' : 'es-ES';
         recognition.interimResults = false;
 
-        recognition.onstart = () => {
-            micBtn.classList.add('listening');
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            input.value = transcript;
-        };
-
-        recognition.onerror = () => {
-            micBtn.classList.remove('listening');
-            recognition = null;
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove('listening');
-            recognition = null;
-        };
+        recognition.onstart = () => { micBtn.classList.add('listening'); };
+        recognition.onresult = (event) => { input.value = event.results[0][0].transcript; };
+        recognition.onerror = () => { micBtn.classList.remove('listening'); recognition = null; };
+        recognition.onend = () => { micBtn.classList.remove('listening'); recognition = null; };
 
         recognition.start();
+    };
+
+    window.interrompiGenerazione = function() {
+        stopGenerazioneFlag = true;
     };
 
     window.inviaMessaggio = async function() {
@@ -1192,12 +1173,18 @@
         const aiBubbleId = "ai-reply-" + Date.now();
         chatBox.innerHTML += `
             <div class="message-row">
-                <div id="chat-canvas-container"></div>
+                <div class="avatar-canvas-box"></div>
                 <div class="message-bubble" id="${aiBubbleId}"><em>AvatarBox sta elaborando...</em></div>
             </div>
         `;
         chatBox.scrollTop = chatBox.scrollHeight;
 
+        const sendBtn = document.getElementById('sendBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        if(sendBtn) sendBtn.style.display = 'none';
+        if(stopBtn) stopBtn.style.display = 'inline-block';
+
+        stopGenerazioneFlag = false;
         let fullReply = "";
 
         try {
@@ -1207,6 +1194,9 @@
             });
 
             for await (const chunk of completion) {
+                if (stopGenerazioneFlag) {
+                    break;
+                }
                 const delta = chunk.choices[0]?.delta?.content || "";
                 fullReply += delta;
                 const bubble = document.getElementById(aiBubbleId);
@@ -1214,6 +1204,7 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
+            if(!fullReply) fullReply = "(Generazione interrotta)";
             chatHistory.push({ role: "assistant", content: fullReply });
             
             const bubble = document.getElementById(aiBubbleId);
@@ -1224,17 +1215,23 @@
                 `;
             }
 
-            faiParlareIA(fullReply);
+            if (!stopGenerazioneFlag) {
+                faiParlareIA(fullReply);
+            }
             salvaChatCorrente();
         } catch(e) {
             const bubble = document.getElementById(aiBubbleId);
             if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore durante la generazione locale.</span>`;
             staParlando = false;
+        } finally {
+            if(sendBtn) sendBtn.style.display = 'inline-block';
+            if(stopBtn) stopBtn.style.display = 'none';
+            staParlando = false;
         }
     };
 
     window.onload = () => {
-        initPreview3D();
+        initAvatarRenderer('preview-canvas-container');
         caricaStoricoSidebar();
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => {
