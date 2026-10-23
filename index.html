@@ -1,806 +1,413 @@
+```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AvatarBox — Ultimate Free AI & 3D Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#030508">
+<title>AvatarBox — AI & 3D Studio</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
-  --bg: #030508;
-  --panel: rgba(12, 16, 24, 0.96);
-  --border: rgba(255, 255, 255, 0.08);
-  --accent: #10b981;
-  --accent-glow: rgba(16, 185, 129, 0.25);
-  --text: #f3f4f6;
-  --sub: #9ca3af;
-  --user-bg: rgba(16, 185, 129, 0.18);
-  --danger: #ef4444;
+  --bg:#030508;
+  --panel:#0c1018;
+  --panel2:#111722;
+  --border:rgba(255,255,255,.10);
+  --accent:#10b981;
+  --glow:rgba(16,185,129,.18);
+  --text:#f3f4f6;
+  --muted:#9ca3af;
+  --danger:#ef4444;
 }
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  min-height:100dvh;
 }
-
-body {
-  background-color: var(--bg);
-  background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08), transparent 70%);
-  color: var(--text);
-  font-family: 'Inter', -apple-system, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
 }
-
-#app {
-  width: 100vw;
-  height: 100vh;
-  max-width: 1080px;
-  max-height: 760px;
-  background: var(--panel);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  box-shadow: 0 40px 80px rgba(0,0,0,0.85);
+#app{
+  width:100%;max-width:1200px;min-height:100dvh;margin:auto;
+  background:linear-gradient(145deg,#0b111a,#030508 75%);
+  display:flex;flex-direction:column;border:1px solid var(--border)
 }
-
-@media (min-width: 768px) {
-  #app { border-radius: 20px; }
+header{
+  min-height:65px;padding:12px 18px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);
+  background:#080c12;position:sticky;top:0;z-index:20
 }
-
-header {
-  background: rgba(6, 9, 14, 0.95);
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  flex-shrink: 0;
-  z-index: 30;
+.logo{font-size:19px;font-weight:800;letter-spacing:-.7px}
+.logo span{color:var(--accent)}
+.header-actions{display:flex;align-items:center;gap:10px}
+.status{font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;background:var(--accent);
+border-radius:50%;margin-right:6px}
+.btn,.small-btn{
+  border:1px solid var(--border);border-radius:9px;padding:10px 13px;
+  color:var(--text);background:var(--panel2)
 }
-
-.logo { font-weight: 700; color: #fff; font-size: 16px; display: flex; align-items: center; gap: 10px; }
-.logo span { color: var(--accent); }
-
-.header-actions { display: flex; gap: 10px; align-items: center; }
-
-.icon-btn {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
+.btn.primary{background:var(--accent);color:#032219;border-color:var(--accent);font-weight:750}
+.btn:hover,.small-btn:hover{filter:brightness(1.15)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.main{display:flex;flex:1;min-height:0;position:relative}
+.sidebar{
+  width:240px;flex-shrink:0;padding:16px;display:flex;flex-direction:column;
+  gap:12px;background:rgba(4,7,12,.95);border-right:1px solid var(--border)
 }
-.icon-btn:hover { background: var(--accent-glow); border-color: var(--accent); color: #fff; }
-
-.status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); display: inline-block; margin-right: 6px; }
-
-/* Layout Principale con Sidebar */
-.main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
-
-#sidebar-overlay {
-  display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 15; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s;
+.section-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.history{display:flex;flex-direction:column;gap:6px;overflow:auto;max-height:45vh}
+.history-item{
+  width:100%;text-align:left;color:var(--muted);background:#10151e;
+  border:1px solid var(--border);padding:10px;border-radius:8px;
+  overflow-wrap:anywhere;font-size:12px
 }
-#sidebar-overlay.active { display: block; opacity: 1; }
-
-#sidebar {
-  width: 260px;
-  background: rgba(5, 7, 12, 0.95);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  gap: 12px;
-  flex-shrink: 0;
-  z-index: 20;
+.history-item:hover{border-color:var(--accent);color:white}
+.content{flex:1;min-width:0;padding:20px;display:flex;flex-direction:column}
+.setup,.chat{width:100%;max-width:760px;margin:0 auto;min-width:0}
+.setup{display:flex;flex-direction:column;gap:14px}
+h1{font-size:25px;text-align:center;margin:8px 0 0;letter-spacing:-.8px}
+.subtitle{text-align:center;color:var(--muted);font-size:13px;margin:0 0 6px}
+.preview{
+  display:flex;align-items:center;gap:18px;padding:14px;
+  border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.025)
 }
-
-.menu-btn { display: none; }
-
-@media (max-width: 767px) {
-  #sidebar {
-    position: absolute; top: 0; bottom: 0; left: 0;
-    transform: translateX(-100%);
-    transition: transform .3s ease;
-    box-shadow: 15px 0 30px rgba(0,0,0,0.8);
+.avatar-preview{
+  width:128px;height:128px;flex-shrink:0;border-radius:12px;
+  border:1px solid var(--accent);overflow:hidden;background:#05070a
+}
+.avatar-preview canvas{display:block;width:100%;height:100%}
+.preview-name{font-weight:750;font-size:17px}
+.muted{font-size:12px;color:var(--muted);line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{
+  min-width:0;padding:12px;border:1px solid var(--border);
+  border-radius:10px;background:rgba(0,0,0,.2)
+}
+.field.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+input[type=text],select,textarea{
+  width:100%;min-width:0;padding:10px;border:1px solid var(--border);
+  border-radius:8px;background:#080c12;color:white
+}
+input[type=color]{width:100%;height:38px;border:0;background:transparent;cursor:pointer}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:flex;align-items:center;gap:7px;padding:8px 10px;
+border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted)}
+.pill input{accent-color:var(--accent)}
+.chat{display:none;flex-direction:column;flex:1;min-height:55vh}
+.messages{
+  flex:1;min-height:300px;max-height:65vh;overflow:auto;
+  border:1px solid var(--border);border-radius:12px;padding:16px;
+  display:flex;flex-direction:column;gap:14px;background:rgba(0,0,0,.22)
+}
+.message{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.message.user{align-items:flex-end}
+.message-name{font-size:11px;color:var(--muted)}
+.bubble{
+  max-width:90%;white-space:pre-wrap;overflow-wrap:anywhere;
+  padding:12px 14px;border:1px solid var(--border);border-radius:12px;
+  background:#111722;font-size:14px;line-height:1.6
+}
+.user .bubble{background:rgba(16,185,129,.13);border-color:rgba(16,185,129,.3)}
+.message-tools{display:flex;gap:6px}
+.tts{padding:5px 8px;font-size:11px;border-radius:6px}
+.composer{display:flex;gap:8px;margin-top:12px;align-items:stretch}
+#user-input{flex:1;min-height:48px;max-height:140px;resize:vertical}
+.mic{min-width:48px}
+.error{color:#fca5a5;font-size:12px;margin-top:8px}
+.hidden{display:none!important}
+footer{padding:12px;text-align:center;font-size:11px;color:#717b8b}
+@media(min-width:768px){
+  #app{min-height:100dvh}
+}
+@media(max-width:767px){
+  header{padding:10px}
+  .sidebar{
+    position:absolute;top:0;bottom:0;left:0;z-index:15;
+    width:min(280px,85vw);transform:translateX(-110%);
+    transition:transform .2s;box-shadow:10px 0 30px #000
   }
-  #sidebar.open { transform: none; }
-  .menu-btn { display: inline-block; }
+  .sidebar.open{transform:translateX(0)}
+  .content{padding:12px}
+  .grid{grid-template-columns:1fr}
+  .field.full{grid-column:auto}
+  .preview{gap:12px}
+  .avatar-preview{width:100px;height:100px}
+  h1{font-size:22px}
+  .bubble{max-width:96%}
+  .messages{max-height:none}
 }
-
-.sidebar-title { font-size: 11px; text-transform: uppercase; color: var(--sub); font-family: 'Fira Code', monospace; letter-spacing: 0.08em; }
-.history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-.history-item {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-  color: var(--sub);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
 }
-.history-item:hover { background: var(--accent-glow); color: #fff; border-color: var(--accent); }
-
-/* Schermi interni */
-.screen-area { flex: 1; padding: 16px; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-
-/* Setup & Wizard */
-.setup-container {
-  flex: 1;
-  min-height: 0;
-  max-width: 650px;
-  margin: 0 auto;
-  width: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 10px 4px 30px;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.setup-title { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.5px; }
-.setup-desc { font-size: 12px; color: var(--sub); text-align: center; margin-top: -6px; }
-
-.card-preview {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.avatar-container-3d {
-  width: 100px; height: 100px;
-  background: #05070a;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 0 20px var(--accent-glow);
-}
-
-.form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-@media (min-width: 550px) { .form-grid { grid-template-columns: 1fr 1fr; } }
-
-.field-group {
-  background: rgba(0,0,0,0.25);
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.field-full { grid-column: 1 / -1; }
-
-label { font-size: 11.5px; font-weight: 500; color: var(--sub); }
-
-input[type="text"], select, textarea {
-  background: #080b12;
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: inherit;
-  width: 100%;
-  outline: none;
-}
-input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-
-/* Gadgets Pills */
-.pills-group { display: flex; gap: 8px; flex-wrap: wrap; }
-.pill-checkbox { display: none; }
-.pill-label {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  cursor: pointer;
-  color: var(--sub);
-  user-select: none;
-}
-.pill-checkbox:checked + .pill-label {
-  background: var(--accent-glow);
-  border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 0 10px var(--accent-glow);
-}
-
-.btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 13.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px var(--accent-glow);
-}
-.btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-/* Chat View */
-.chat-screen {
-  flex: 1;
-  display: none;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.chat-box {
-  flex: 1;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.msg-row { display: flex; gap: 12px; width: 100%; animation: fadeIn 0.25s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-.msg-avatar { width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--border); background: #05070a; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-
-.msg-bubble {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 13.5px;
-  line-height: 1.55;
-  max-width: 82%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-.msg-row.user { justify-content: flex-end; }
-.msg-row.user .msg-bubble { background: var(--user-bg); border-color: rgba(16,185,129,0.3); color: #fff; }
-
-.tts-btn {
-  background: var(--accent-glow);
-  border: 1px solid var(--accent);
-  color: #fff;
-  font-size: 11px;
-  padding: 5px 10px;
-  border-radius: 7px;
-  cursor: pointer;
-  margin-top: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.tts-btn:hover { background: var(--accent); }
-
-.chat-controls { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
-textarea#user-input {
-  flex: 1;
-  background: #080b12;
-  border: 1px solid var(--border);
-  color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 13.5px;
-  font-family: inherit;
-  height: 48px;
-  resize: none;
-  outline: none;
-}
-textarea#user-input:focus { border-color: var(--accent); }
-
-.mic-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  width: 48px; height: 48px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; cursor: pointer; flex-shrink: 0;
-}
-.mic-btn.listening { background: var(--danger); border-color: #f87171; animation: pulse 1.2s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 70% { box-shadow: 0 0 0 12px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 </style>
 </head>
+
 <body>
-
 <div id="app">
-  <header>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <button class="icon-btn menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-      <div class="logo">Avatar<span>Box</span></div>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" onclick="apriImpostazioni()" id="settingsBtn" style="display:none;">⚙️ Modifica</button>
-      <div style="color: var(--sub); font-size: 11.5px;"><span class="status-dot"></span>Pronto</div>
-    </div>
-  </header>
-
-  <div class="main-layout">
-    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <div id="sidebar">
-      <div class="sidebar-title">💬 Cronologia Chat</div>
-      <button class="btn" onclick="nuovaChat()" style="padding: 8px; font-size: 12px;">+ Nuova Chat</button>
-      <div class="history-list" id="historyList"></div>
-      <button onclick="cancellaCronologia()" style="background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); padding: 7px; font-size: 11.5px; border-radius: 8px; cursor: pointer;">Pulisci Storico</button>
-    </div>
-
-    <div class="screen-area">
-      <!-- SETUP VIEW -->
-      <div class="setup-container" id="setup-view">
-        <div class="setup-title">Crea il tuo Avatar 3D & AI Hub</div>
-        <div class="setup-desc">Personalizza aspetto, gadget, voce e modella la tua esperienza gratuita.</div>
-
-        <div class="card-preview">
-          <div class="avatar-container-3d" id="preview-render"></div>
-          <div>
-            <div style="font-weight: 600; font-size: 15px;" id="preview-name-label">Nexus</div>
-            <div style="font-size: 11.5px; color: var(--sub);">Anteprima 3D in tempo reale</div>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="field-group">
-            <label>Nome Avatar</label>
-            <input type="text" id="avatar-name" value="Nexus" oninput="updatePreviewConfig()">
-          </div>
-
-          <div class="field-group">
-            <label>Lingua IA</label>
-            <select id="ai-lang" onchange="aggiornaVociTTS()">
-              <option value="it">Italiano</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-            </select>
-          </div>
-
-          <div class="field-group field-full">
-            <label>Modello IA Libero</label>
-            <select id="ai-model">
-              <option value="qwen">Qwen 2.5 72B (Consigliato / Veloce)</option>
-              <option value="llama">Llama 3.3 70B (Avanzato)</option>
-              <option value="deepseek">DeepSeek V3 (Logico)</option>
-              <option value="mistral">Mistral Small (Standard)</option>
-            </select>
-          </div>
-
-          <div class="field-group field-full">
-            <label>Voce Sintetica (TTS)</label>
-            <select id="voice-select"></select>
-          </div>
-
-          <div class="field-group field-full">
-            <label>Gadget & Accessori 3D</label>
-            <div class="pills-group">
-              <input type="checkbox" id="gadget-glasses" class="pill-checkbox" onchange="updatePreviewConfig()">
-              <label for="gadget-glasses" class="pill-label">👓 Occhiali</label>
-
-              <input type="checkbox" id="gadget-visor" class="pill-checkbox" onchange="updatePreviewConfig()">
-              <label for="gadget-visor" class="pill-label">🛡️ Visore</label>
-
-              <input type="checkbox" id="gadget-headphones" class="pill-checkbox" onchange="updatePreviewConfig()">
-              <label for="gadget-headphones" class="pill-label">🎧 Cuffie</label>
-
-              <input type="checkbox" id="gadget-cap" class="pill-checkbox" onchange="updatePreviewConfig()">
-              <label for="gadget-cap" class="pill-label">🧢 Cappello</label>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label>Colore Pelle</label>
-            <input type="color" id="col-skin" value="#e0a96d" onchange="updatePreviewConfig()" style="height:38px; border:none; background:none; cursor:pointer;">
-          </div>
-
-          <div class="field-group">
-            <label>Colore Capelli</label>
-            <input type="color" id="col-hair" value="#2d3748" onchange="updatePreviewConfig()" style="height:38px; border:none; background:none; cursor:pointer;">
-          </div>
-        </div>
-
-        <button class="btn" onclick="startApp()" style="margin-top: 6px;">Avvia AvatarBox</button>
-      </div>
-
-      <!-- CHAT VIEW -->
-      <div class="chat-screen" id="chat-view">
-        <div class="chat-box" id="chat-box"></div>
-        <div class="chat-controls">
-          <button class="mic-btn" id="mic-btn" onclick="toggleMicrofono()" title="Dettatura Vocale">🎤</button>
-          <textarea id="user-input" placeholder="Scrivi un messaggio..."></textarea>
-          <button class="btn" onclick="sendMessage()" style="height: 48px; width: 90px;">Invia</button>
-        </div>
-      </div>
-    </div>
+<header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="small-btn" id="menuBtn" aria-label="Apri menu">☰</button>
+    <div class="logo">Avatar<span>Box</span></div>
   </div>
+  <div class="header-actions">
+    <button class="small-btn hidden" id="settingsBtn">⚙ Modifica</button>
+    <div class="status"><span class="dot"></span><span id="statusText">Pronto</span></div>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar" id="sidebar">
+    <div class="section-label">Cronologia chat</div>
+    <button class="btn primary" id="newChatBtn">+ Nuova chat</button>
+    <div class="history" id="historyList"></div>
+    <button class="small-btn" id="clearHistoryBtn">Elimina cronologia</button>
+  </aside>
+
+  <main class="content">
+    <section class="setup" id="setup">
+      <h1>Crea il tuo Avatar 3D</h1>
+      <p class="subtitle">Personalizza l'aspetto e scegli il modello IA.</p>
+
+      <div class="preview">
+        <div class="avatar-preview" id="preview3d"></div>
+        <div>
+          <div class="preview-name" id="previewName">Nexus</div>
+          <p class="muted">Anteprima 3D interattiva</p>
+          <p class="muted">Personalizza occhi, pelle, capelli e accessori.</p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="avatar-name">Nome avatar</label>
+          <input id="avatar-name" type="text" maxlength="40" value="Nexus">
+        </div>
+
+        <div class="field">
+          <label for="ai-lang">Lingua</label>
+          <select id="ai-lang">
+            <option value="it">Italiano</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="ai-model">Modello IA</label>
+          <select id="ai-model">
+            <option value="openai">OpenAI (se supportato dal provider)</option>
+            <option value="qwen">Qwen</option>
+            <option value="llama">Llama</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="mistral">Mistral</option>
+          </select>
+          <p class="muted">La disponibilità dipende dal servizio IA. I nomi nel menu non garantiscono che ogni modello sia disponibile.</p>
+        </div>
+
+        <div class="field">
+          <label for="col-skin">Colore pelle</label>
+          <input type="color" id="col-skin" value="#e0a96d">
+        </div>
+
+        <div class="field">
+          <label for="col-hair">Colore capelli</label>
+          <input type="color" id="col-hair" value="#2d3748">
+        </div>
+
+        <div class="field">
+          <label for="col-eyes">Colore occhi</label>
+          <input type="color" id="col-eyes" value="#38bdf8">
+        </div>
+
+        <div class="field">
+          <label for="col-clothes">Colore accessori</label>
+          <input type="color" id="col-clothes" value="#10b981">
+        </div>
+
+        <div class="field full">
+          <label>Accessori 3D</label>
+          <div class="pills">
+            <label class="pill"><input type="checkbox" id="g-glasses"> 👓 Occhiali</label>
+            <label class="pill"><input type="checkbox" id="g-visor"> 🛡 Visore</label>
+            <label class="pill"><input type="checkbox" id="g-headphones"> 🎧 Cuffie</label>
+            <label class="pill"><input type="checkbox" id="g-cap"> 🧢 Cappello</label>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="voice-select">Voce sintetica</label>
+          <select id="voice-select">
+            <option value="">Voce predefinita del browser</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn primary" id="startBtn">Avvia AvatarBox →</button>
+      <p class="muted">La configurazione è salvata nel browser. Le chat possono contenere dati personali: evita di condividere informazioni riservate.</p>
+    </section>
+
+    <section class="chat" id="chat">
+      <div class="messages" id="messages" aria-live="polite"></div>
+      <div class="composer">
+        <button class="small-btn mic" id="micBtn" title="Dettatura vocale" aria-label="Dettatura vocale">🎤</button>
+        <textarea id="user-input" rows="1" maxlength="12000" placeholder="Scrivi un messaggio..."></textarea>
+        <button class="btn primary" id="sendBtn">Invia</button>
+      </div>
+      <p class="error" id="errorText" role="status"></p>
+    </section>
+  </main>
+</div>
+<footer>AvatarBox · Esperienza AI e 3D</footer>
 </div>
 
 <script>
-let cfg = {
-  name: "Nexus", lang: "it", model: "qwen",
-  skin: "#e0a96d", hair: "#2d3748",
-  gadgets: { glasses: false, visor: false, headphones: false, cap: false }
+"use strict";
+
+const $ = id => document.getElementById(id);
+const CONFIG_KEY = "avatarbox_config_v2";
+const CHATS_KEY = "avatarbox_chats_v2";
+
+const DEFAULT_CONFIG = {
+  name:"Nexus", lang:"it", model:"qwen",
+  skin:"#e0a96d", hair:"#2d3748", eyes:"#38bdf8",
+  clothes:"#10b981",
+  gadgets:{glasses:false,visor:false,headphones:false,cap:false}
 };
 
-let chatHistory = [];
-let savedChats = [];
-let currentChatId = null;
-let scene, camera, renderer, headGroup;
-let isSpeaking = false;
-let animFrameId = null;
-
-// Carica configurazione salvata se esiste
-const savedConfig = localStorage.getItem('avatarbox_final_config');
-if(savedConfig) { try { cfg = JSON.parse(savedConfig); } catch(e) {} }
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('active');
+function readStorage(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
 }
-
-function init3D(containerId, size = 100) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if(animFrameId) cancelAnimationFrame(animFrameId);
-
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-  camera.position.z = 3.6;
-
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(size, size);
-  container.innerHTML = "";
-  container.appendChild(renderer.domElement);
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const light = new THREE.DirectionalLight(0xffffff, 1.2);
-  light.position.set(3, 3, 5);
-  scene.add(light);
-
-  buildAvatarModel();
-
-  function animate() {
-    animFrameId = requestAnimationFrame(animate);
-    if (headGroup) {
-      headGroup.rotation.y += isSpeaking ? 0.045 : 0.01;
-      headGroup.rotation.x = Math.sin(Date.now() * 0.0025) * 0.1;
-    }
-    renderer.render(scene, camera);
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    showError("Impossibile salvare i dati nel browser. Lo spazio potrebbe essere esaurito.");
+    return false;
   }
-  animate();
 }
-
-function buildAvatarModel() {
-  if (headGroup) scene.remove(headGroup);
-  headGroup = new THREE.Group();
-
-  const skinMat = new THREE.MeshStandardMaterial({ color: cfg.skin, roughness: 0.4 });
-  const hairMat = new THREE.MeshStandardMaterial({ color: cfg.hair, roughness: 0.6 });
-
-  const head = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.6), skinMat);
-  const hair = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.55, 1.65), hairMat);
-  hair.position.y = 0.65;
-  headGroup.add(head);
-  headGroup.add(hair);
-
-  // Gadgets 3D
-  if(cfg.gadgets.glasses) {
-    const gMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
-    const glasses = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.3, 0.2), gMat);
-    glasses.position.set(0, 0.1, 0.9);
-    headGroup.add(glasses);
-  }
-  if(cfg.gadgets.visor) {
-    const vMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00f3ff, emissiveIntensity: 0.5 });
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.4, 0.3), vMat);
-    visor.position.set(0, 0.15, 0.88);
-    headGroup.add(visor);
-  }
-  if(cfg.gadgets.headphones) {
-    const hMat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
-    const cL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.5), hMat); cL.position.set(-0.9, 0.1, 0);
-    const cR = cL.clone(); cR.position.set(0.9, 0.1, 0);
-    const band = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.12, 0.2), hMat); band.position.set(0, 0.95, 0);
-    headGroup.add(cL); headGroup.add(cR); headGroup.add(band);
-  }
-  if(cfg.gadgets.cap) {
-    const cMat = new THREE.MeshStandardMaterial({ color: 0x1e40af });
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.25, 1.7), cMat); cap.position.set(0, 0.95, 0);
-    const visorPart = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.6), cMat); visorPart.position.set(0, 0.85, 1.0);
-    headGroup.add(cap); headGroup.add(visorPart);
-  }
-
-  scene.add(headGroup);
+function validColor(value, fallback) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+    ? value : fallback;
 }
-
-function updatePreviewConfig() {
-  cfg.name = document.getElementById('avatar-name').value || "Nexus";
-  cfg.lang = document.getElementById('ai-lang').value;
-  cfg.model = document.getElementById('ai-model').value;
-  cfg.skin = document.getElementById('col-skin').value;
-  cfg.hair = document.getElementById('col-hair').value;
-  cfg.gadgets = {
-    glasses: document.getElementById('gadget-glasses').checked,
-    visor: document.getElementById('gadget-visor').checked,
-    headphones: document.getElementById('gadget-headphones').checked,
-    cap: document.getElementById('gadget-cap').checked
+function loadConfig() {
+  const raw = readStorage(CONFIG_KEY, {});
+  return {
+    ...DEFAULT_CONFIG, ...raw,
+    skin:validColor(raw.skin, DEFAULT_CONFIG.skin),
+    hair:validColor(raw.hair, DEFAULT_CONFIG.hair),
+    eyes:validColor(raw.eyes, DEFAULT_CONFIG.eyes),
+    clothes:validColor(raw.clothes, DEFAULT_CONFIG.clothes),
+    gadgets:{...DEFAULT_CONFIG.gadgets,...(raw.gadgets || {})}
   };
-
-  document.getElementById('preview-name-label').innerText = cfg.name;
-  localStorage.setItem('avatarbox_final_config', JSON.stringify(cfg));
-  buildAvatarModel();
 }
 
-function aggiornaVociTTS() {
-  const lang = document.getElementById('ai-lang').value;
-  const select = document.getElementById('voice-select');
-  if(!select) return;
-  select.innerHTML = "";
+let cfg = loadConfig();
+let chats = readStorage(CHATS_KEY, []);
+if (!Array.isArray(chats)) chats = [];
+let currentChatId = null;
+let messages = [];
+let busy = false;
+let recognition = null;
+let renderer = null;
+let scene = null;
+let camera = null;
+let headGroup = null;
+let animationId = 0;
+let resizeObserver = null;
 
-  if(!('speechSynthesis' in window)) return;
-  const voices = window.speechSynthesis.getVoices();
-  let filtered = voices.filter(v => v.lang.toLowerCase().startsWith(lang));
-  if(filtered.length === 0) filtered = voices;
-
-  filtered.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v.name;
-    opt.text = `${v.name} (${v.lang})`;
-    select.add(opt);
-  });
+function showError(message) {
+  $("errorText").textContent = message || "";
+}
+function setStatus(message) {
+  $("statusText").textContent = message;
+}
+function getLangTag() {
+  return {"it":"it-IT","en":"en-US","es":"es-ES","fr":"fr-FR"}[cfg.lang] || "it-IT";
 }
 
-function startApp(isRestore = false) {
-  updatePreviewConfig();
-  document.getElementById('setup-view').style.display = "none";
-  document.getElementById('chat-view').style.display = "flex";
-  document.getElementById('settingsBtn').style.display = "inline-block";
+function syncConfigFromUI() {
+  cfg.name = $("avatar-name").value.trim().slice(0,40) || "Nexus";
+  cfg.lang = $("ai-lang").value;
+  cfg.model = $("ai-model").value;
+  cfg.skin = $("col-skin").value;
+  cfg.hair = $("col-hair").value;
+  cfg.eyes = $("col-eyes").value;
+  cfg.clothes = $("col-clothes").value;
+  cfg.gadgets = {
+    glasses:$("g-glasses").checked,
+    visor:$("g-visor").checked,
+    headphones:$("g-headphones").checked,
+    cap:$("g-cap").checked
+  };
+  $("previewName").textContent = cfg.name;
+  writeStorage(CONFIG_KEY, cfg);
+  rebuildAvatar();
+}
 
-  if(window.innerWidth < 768) {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('active');
-  }
+function syncUIFromConfig() {
+  $("avatar-name").value = cfg.name;
+  $("ai-lang").value = cfg.lang;
+  $("ai-model").value = cfg.model;
+  $("col-skin").value = cfg.skin;
+  $("col-hair").value = cfg.hair;
+  $("col-eyes").value = cfg.eyes;
+  $("col-clothes").value = cfg.clothes;
+  $("g-glasses").checked = cfg.gadgets.glasses;
+  $("g-visor").checked = cfg.gadgets.visor;
+  $("g-headphones").checked = cfg.gadgets.headphones;
+  $("g-cap").checked = cfg.gadgets.cap;
+  $("previewName").textContent = cfg.name;
+}
 
-  const chatBox = document.getElementById('chat-box');
-  if(!isRestore || chatHistory.length === 0) {
-    chatHistory.push({ role: "system", content: `Ti chiami ${cfg.name}. Rispondi sempre in italiano in modo amichevole, chiaro e conciso.` });
-    chatBox.innerHTML = `
-      <div class="msg-row">
-        <div class="msg-avatar" id="chat-3d-avatar"></div>
-        <div class="msg-bubble"><strong>${cfg.name}:</strong> Ciao! Sono online e pronto a chattare con te.</div>
-      </div>
-    `;
-  } else {
-    chatBox.innerHTML = `
-      <div class="msg-row">
-        <div class="msg-avatar" id="chat-3d-avatar"></div>
-        <div class="msg-bubble"><strong>${cfg.name}:</strong> Chat ripristinata con successo.</div>
-      </div>
-    `;
-    chatHistory.forEach(msg => {
-      if(msg.role === 'user') {
-        chatBox.innerHTML += `<div class="msg-row user"><div class="msg-bubble">${escapeHtml(msg.content)}</div></div>`;
-      } else if(msg.role === 'assistant') {
-        chatBox.innerHTML += `
-          <div class="msg-row">
-            <div class="msg-avatar"></div>
-            <div class="msg-bubble"><strong>${cfg.name}:</strong> ${escapeHtml(msg.content)}<br>
-            <button class="tts-btn" onclick="speakResponse('${msg.content.replace(/'/g, "\\'")}')">🔊 Ascolta</button></div>
-          </div>
-        `;
+function material(color, roughness=.5, metalness=0) {
+  return new THREE.MeshStandardMaterial({color,roughness,metalness});
+}
+function addBox(parent, size, color, position, opts={}) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(...size),
+    material(color,opts.roughness ?? .45,opts.metalness ?? 0)
+  );
+  mesh.position.set(...position);
+  parent.add(mesh);
+  return mesh;
+}
+function addSphere(parent, radius, color, position, scale=[1,1,1]) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(radius,24,16),
+    material(color,.3)
+  );
+  mesh.position.set(...position);
+  mesh.scale.set(...scale);
+  parent.add(mesh);
+  return mesh;
+}
+
+function createAvatar() {
+  if (!scene) return;
+  if (headGroup) {
+    scene.remove(headGroup);
+    headGroup.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m=>m.dispose());
+        else obj.material.dispose();
       }
     });
   }
+  headGroup = new THREE.Group();
 
-  init3D('chat-3d-avatar', 42);
-  salvaChatCorrente();
-}
-
-function apriImpostazioni() {
-  document.getElementById('chat-view').style.display = "none";
-  document.getElementById('setup-view').style.display = "flex";
-  document.getElementById('settingsBtn').style.display = "none";
-  init3D('preview-render', 100);
-}
-
-function nuovaChat() {
-  currentChatId = null;
-  chatHistory = [];
-  location.reload();
-}
-
-function salvaChatCorrente() {
-  if(!currentChatId) currentChatId = Date.now();
-  const chatData = { id: currentChatId, name: cfg.name, config: cfg, messages: chatHistory };
-  let saved = localStorage.getItem('avatarbox_final_chats');
-  let list = saved ? JSON.parse(saved) : [];
-  const idx = list.findIndex(c => c.id === currentChatId);
-  if(idx >= 0) list[idx] = chatData; else list.unshift(chatData);
-  localStorage.setItem('avatarbox_final_chats', JSON.stringify(list));
-  caricaStoricoSidebar();
-}
-
-function caricaStoricoSidebar() {
-  const listEl = document.getElementById('historyList');
-  if(!listEl) return;
-  const saved = localStorage.getItem('avatarbox_final_chats');
-  savedChats = saved ? JSON.parse(saved) : [];
-  listEl.innerHTML = "";
-
-  if(savedChats.length === 0) {
-    listEl.innerHTML = `<div style="font-size:11px; color:var(--sub); text-align:center; padding: 10px;">Nessuna chat salvata</div>`;
-    return;
-  }
-
-  savedChats.forEach(chat => {
-    const div = document.createElement('div');
-    div.className = 'history-item';
-    div.innerText = `${chat.name} (${new Date(chat.id).toLocaleDateString()})`;
-    div.onclick = () => ripristinaChat(chat.id);
-    listEl.appendChild(div);
-  });
-}
-
-function ripristinaChat(id) {
-  const saved = localStorage.getItem('avatarbox_final_chats');
-  if(!saved) return;
-  const list = JSON.parse(saved);
-  const chat = list.find(c => c.id === id);
-  if(!chat) return;
-  currentChatId = chat.id; cfg = chat.config; chatHistory = chat.messages;
-  startApp(true);
-}
-
-function cancellaCronologia() {
-  if(confirm("Vuoi eliminare tutte le chat salvate?")) {
-    localStorage.removeItem('avatarbox_final_chats');
-    caricaStoricoSidebar();
-  }
-}
-
-async function sendMessage() {
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text) return;
-
-  input.value = "";
-  const chatBox = document.getElementById('chat-box');
-
-  chatBox.innerHTML += `
-    <div class="msg-row user">
-      <div class="msg-bubble">${escapeHtml(text)}</div>
-    </div>
-  `;
-
-  chatHistory.push({ role: "user", content: text });
-
-  const replyId = "reply-" + Date.now();
-  chatBox.innerHTML += `
-    <div class="msg-row">
-      <div class="msg-avatar"></div>
-      <div class="msg-bubble" id="${replyId}"><em>Sto elaborando...</em></div>
-    </div>
-  `;
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-    isSpeaking = true;
-    const response = await fetch("https://text.pollinations.ai/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: chatHistory,
-        model: cfg.model
-      })
-    });
-
-    if (!response.ok) throw new Error("Errore di rete");
-
-    const reply = await response.text();
-    chatHistory.push({ role: "assistant", content: reply });
-
-    document.getElementById(replyId).innerHTML = `
-      <strong>${cfg.name}:</strong> ${escapeHtml(reply)}<br>
-      <button class="tts-btn" onclick="speakResponse('${reply.replace(/'/g, "\\'")}')">🔊 Ascolta</button>
-    `;
-    speakResponse(reply);
-    salvaChatCorrente();
-  } catch (err) {
-    document.getElementById(replyId).innerHTML = `<span style="color:var(--danger)">Errore di connessione. Riprova tra un attimo.</span>`;
-  } finally {
-    isSpeaking = false;
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-}
-
-function speakResponse(txt) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(txt.replace(/[*#_~`]/g, ''));
-  u.lang = cfg.lang === 'it' ? 'it-IT' : 'en-US';
-  
-  const select = document.getElementById('voice-select');
-  if(select && select.value) {
-    const voices = window.speechSynthesis.getVoices();
-    const v = voices.find(voice => voice.name === select.value);
-    if(v) u.voice = v;
-  }
-
-  isSpeaking = true;
-  u.onend = () => { isSpeaking = false; };
-  u.onerror = () => { isSpeaking = false; };
-  window.speechSynthesis.speak(u);
-}
-
-let recognition = null;
-function toggleMicrofono() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert("Riconoscimento vocale non supportato da questo browser."); return; }
-  const micBtn = document.getElementById('mic-btn');
-  const input = document.getElementById('user-input');
-
-  if (recognition) { recognition.stop(); recognition = null; micBtn.classList.remove('listening'); return; }
-  recognition = new SpeechRecognition();
-  recognition.lang = cfg.lang === 'it' ? 'it-IT' : 'en-US';
-  recognition.onstart = () => { micBtn.classList.add('listening'); };
-  recognition.onresult = (event) => { input.value = event.results[0][0].transcript; };
-  recognition.onerror = () => { micBtn.classList.remove('listening'); recognition = null; };
-  recognition.onend = () => { micBtn.classList.remove('listening'); recognition = null; };
-  recognition.start();
-}
-
-function escapeHtml(string) {
-  return String(string).replace(/[&<>"']/g, function (s) {
-    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[s];
-  });
-}
-
-window.onload = () => {
-  // Ripristina campi UI dai settings salvati
-  document.getElementById('avatar-name').value = cfg.name;
-  document.getElementById('ai-lang').value = cfg.lang || 'it';
-  document.getElementById('ai-model').value = cfg.model || 'qwen';
-  document.getElementById('col-skin').value = cfg.skin;
-  document.getElementById('col-hair').value = cfg.hair;
-  document.getElementById('gadget-glasses').checked = cfg.gadgets.glasses;
-  document.getElementById('gadget-visor').checked = cfg.gadgets.visor;
-  document.getElementById('gadget-headphones').checked = cfg.gadgets.headphones;
-  document.getElementById('gadget-cap').checked = cfg.gadgets.cap;
-
-  init3D('preview-render', 100);
-  caricaStoricoSidebar();
-
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = () => { aggiornaVociTTS(); };
-    aggiornaVociTTS();
-  }
-};
-</script>
-</body>
-</html>
+  const skin = material(cfg.skin,.48);
