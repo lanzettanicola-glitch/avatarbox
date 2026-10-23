@@ -1,1130 +1,483 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AvatarBox — Universal AI Platform & 3D Avatar</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
-
-        :root {
-            --bg-base: #05070a;
-            --panel-bg: rgba(14, 18, 26, 0.96);
-            --panel-border: rgba(255, 255, 255, 0.08);
-            --accent: #10b981;
-            --accent-hover: #059669;
-            --text-main: #f3f4f6;
-            --text-sub: #9ca3af;
-        }
-
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(16, 185, 129, 0.4) rgba(0, 0, 0, 0.2);
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.4); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        body {
-            background-color: var(--bg-base);
-            background-image: 
-                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-                radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 45%);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            max-width: 1020px;
-            max-height: 740px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--panel-border);
-            border-radius: 0;
-            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-
-        @media (min-width: 768px) {
-            #game-container {
-                border-radius: 18px;
-                width: 1020px;
-                height: 740px;
-            }
-        }
-
-        header {
-            background: rgba(10, 14, 20, 0.85);
-            padding: 14px 20px;
-            font-size: 13px;
-            font-weight: 600;
-            border-bottom: 1px solid var(--panel-border);
-            color: #34d399;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: 'Fira Code', monospace;
-            flex-shrink: 0;
-        }
-
-        .brand-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #fff;
-        }
-
-        .brand-title span { color: var(--accent); }
-
-        .header-actions { display: flex; gap: 8px; align-items: center; }
-
-        .icon-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--panel-border);
-            color: var(--text-main);
-            padding: 6px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .icon-btn:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--accent); }
-
-        .status-dot {
-            width: 8px; height: 8px;
-            background-color: #10b981; border-radius: 50%;
-            display: inline-block; box-shadow: 0 0 12px #10b981; margin-right: 6px;
-        }
-
-        #app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
-
-        #sidebar {
-            width: 240px; background: rgba(8, 11, 16, 0.7);
-            border-right: 1px solid var(--panel-border);
-            display: flex; flex-direction: column; padding: 14px; gap: 10px; flex-shrink: 0; display: none;
-        }
-
-        @media (min-width: 768px) { #sidebar { display: flex; } }
-
-        #sidebar h3 { font-size: 11.5px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px 0; }
-
-        .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
-
-        .history-item {
-            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--panel-border);
-            padding: 8px 10px; border-radius: 8px; font-size: 12px; cursor: pointer;
-            transition: all 0.2s; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .history-item:hover { background: rgba(16, 185, 129, 0.1); color: #fff; border-color: rgba(16, 185, 129, 0.3); }
-
-        #screen { flex: 1; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
-
-        .setup-screen {
-            display: flex; flex-direction: column; height: 100%; max-width: 560px; margin: 0 auto;
-            text-align: left; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 8px 30px 4px;
-        }
-
-        .setup-screen h1 { color: #f9fafb; font-size: 18px; margin: 0; text-align: center; }
-        .setup-screen p { color: var(--text-sub); font-size: 11.5px; margin: 0; text-align: center; }
-
-        .config-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        @media (min-width: 600px) { .config-grid { grid-template-columns: 1fr 1fr; } }
-
-        .input-group {
-            background: rgba(0, 0, 0, 0.3); padding: 8px 12px; border-radius: 8px;
-            font-size: 11.5px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--panel-border);
-        }
-        .input-group.full-width { grid-column: 1 / -1; }
-
-        label { color: var(--text-sub); font-weight: 500; }
-
-        input[type="text"], select, input[type="password"] {
-            background: rgba(10, 14, 20, 0.85); color: #fff; border: 1px solid var(--panel-border);
-            padding: 6px 8px; font-family: 'Fira Code', monospace; border-radius: 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none;
-        }
-
-        input[type="color"] { border: none; width: 100%; height: 26px; cursor: pointer; background: none; border-radius: 4px; }
-
-        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
-        .checkbox-group label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-main); font-size: 11px; }
-
-        .preview-container {
-            display: flex; align-items: center; justify-content: center; gap: 16px;
-            background: rgba(0, 0, 0, 0.35); padding: 10px; border-radius: 10px; grid-column: 1 / -1; border: 1px solid var(--panel-border);
-        }
-
-        .avatar-canvas-box {
-            width: 75px; height: 75px; border-radius: 10px; overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.12); background: #0d1117; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-        }
-
-        .chat-container {
-            flex: 1; background: rgba(8, 11, 16, 0.7); border: 1px solid var(--panel-border);
-            border-radius: 12px; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
-        }
-
-        .message-row { display: flex; gap: 12px; align-items: flex-start; }
-
-        .message-bubble {
-            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--panel-border);
-            padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: #e5e7eb; max-width: 520px; word-break: break-word; position: relative;
-        }
-        .message-bubble.user { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); margin-left: auto; }
-
-        .tts-action-btn {
-            background: rgba(16, 185, 129, 0.2); border: 1px solid var(--accent); color: #34d399;
-            font-size: 10.5px; padding: 4px 8px; border-radius: 6px; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;
-        }
-        .tts-action-btn:hover { background: var(--accent); color: #fff; }
-
-        .ad-banner {
-            background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 8px; padding: 5px; text-align: center; font-size: 10px; color: var(--text-sub); margin-bottom: 6px;
-        }
-
-        .input-interaction { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
-
-        textarea {
-            flex: 1; background: rgba(10, 14, 20, 0.85); color: #f3f4f6; border: 1px solid var(--panel-border);
-            padding: 10px; font-family: 'Inter', sans-serif; font-size: 13px; border-radius: 10px; resize: none; height: 44px; outline: none;
-        }
-
-        button {
-            background-color: var(--accent); color: white; border: none; padding: 0 16px;
-            font-weight: 600; cursor: pointer; border-radius: 10px; transition: all 0.2s; font-size: 12.5px; height: 44px; flex-shrink: 0;
-        }
-        button:hover { background-color: var(--accent-hover); }
-
-        .stop-btn { background-color: #ef4444; display: none; }
-        .stop-btn:hover { background-color: #dc2626; }
-
-        .mic-btn {
-            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--panel-border); width: 44px; padding: 0;
-            display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-        }
-        .mic-btn.listening { background: #ef4444; border-color: #f87171; animation: pulse-mic 1.2s infinite; }
-
-        @keyframes pulse-mic {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AvatarBox — Universal AI Platform & 3D Avatar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+:root{--bg:#05070a;--panel:rgba(14,18,26,.96);--bd:rgba(255,255,255,.08);--ac:#10b981;--ac2:#059669;--tx:#f3f4f6;--sub:#9ca3af}
+*{scrollbar-width:thin;scrollbar-color:rgba(16,185,129,.4) rgba(0,0,0,.2)}
+body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(16,185,129,.12),transparent 45%),radial-gradient(circle at 85% 85%,rgba(59,130,246,.08),transparent 45%);color:var(--tx);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;overflow-x:hidden}
+#game-container{width:100vw;height:100vh;max-width:1020px;max-height:740px;background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--bd);box-shadow:0 35px 70px rgba(0,0,0,.8);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:768px){#game-container{border-radius:18px;width:1020px;height:740px}}
+header{background:rgba(10,14,20,.85);padding:14px 20px;font-size:13px;font-weight:600;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;font-family:'Fira Code',monospace;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#fff}
+.brand span{color:var(--ac)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--tx);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;height:auto}
+.icon-btn:hover{background:rgba(16,185,129,.2);border-color:var(--ac)}
+.dot{width:8px;height:8px;background:#10b981;border-radius:50%;display:inline-block;box-shadow:0 0 12px #10b981;margin-right:6px}
+#app-layout{display:flex;flex:1;overflow:hidden}
+#sidebar{width:240px;background:rgba(8,11,16,.7);border-right:1px solid var(--bd);display:none;flex-direction:column;padding:14px;gap:10px;flex-shrink:0}
+@media(min-width:768px){#sidebar{display:flex}}
+#sidebar h3{font-size:11.5px;color:var(--sub);text-transform:uppercase;margin:0 0 4px}
+.history-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.history-item{background:rgba(255,255,255,.03);border:1px solid var(--bd);padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item:hover{background:rgba(16,185,129,.1);color:#fff}
+#screen{flex:1;padding:14px;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#main-content{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.setup{display:flex;flex-direction:column;height:100%;max-width:560px;margin:0 auto;gap:12px;overflow-y:auto;padding:4px 8px 30px 4px}
+.setup h1{font-size:18px;margin:0;text-align:center}
+.setup p{color:var(--sub);font-size:11.5px;margin:0;text-align:center}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:600px){.grid{grid-template-columns:1fr 1fr}}
+.ig{background:rgba(0,0,0,.3);padding:8px 12px;border-radius:8px;font-size:11.5px;display:flex;flex-direction:column;gap:4px;border:1px solid var(--bd)}
+.full{grid-column:1/-1}
+label{color:var(--sub);font-weight:500}
+input[type=text],input[type=password],select{background:rgba(10,14,20,.85);color:#fff;border:1px solid var(--bd);padding:6px 8px;font-family:'Fira Code',monospace;border-radius:6px;font-size:12px;width:100%;box-sizing:border-box;outline:none}
+input[type=color]{border:none;width:100%;height:26px;cursor:pointer;background:none}
+.checks{display:flex;gap:10px;flex-wrap:wrap}
+.checks label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--tx);font-size:11px}
+.preview{display:flex;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,.35);padding:10px;border-radius:10px;grid-column:1/-1;border:1px solid var(--bd);font-size:11.5px;color:var(--sub)}
+.abox{width:75px;height:75px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.12);background:#0d1117;flex-shrink:0}
+.abox canvas{display:block}
+.chat-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.chat-top .abox{width:56px;height:56px}
+.chat{flex:1;background:rgba(8,11,16,.7);border:1px solid var(--bd);border-radius:12px;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.message-row{display:flex;gap:10px;align-items:flex-start}
+.message-row.me{justify-content:flex-end}
+.mini{width:36px;height:36px;border-radius:8px;border:1px solid var(--bd);background:#0d1117;flex-shrink:0}
+.message-bubble{background:rgba(255,255,255,.04);border:1px solid var(--bd);padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;color:#e5e7eb;max-width:520px;word-break:break-word;white-space:pre-wrap}
+.message-bubble.user{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3)}
+.tts{background:rgba(16,185,129,.2);border:1px solid var(--ac);color:#34d399;font-size:10.5px;padding:4px 8px;border-radius:6px;cursor:pointer;margin-top:8px;height:auto;display:block}
+.tts:hover{background:var(--ac);color:#fff}
+.banner{border:1px dashed rgba(255,255,255,.15);border-radius:8px;padding:5px;text-align:center;font-size:10px;color:var(--sub);margin:6px 0}
+.input-row{display:flex;gap:8px;align-items:center}
+textarea{flex:1;background:rgba(10,14,20,.85);color:#f3f4f6;border:1px solid var(--bd);padding:10px;font-family:'Inter',sans-serif;font-size:13px;border-radius:10px;resize:none;height:44px;box-sizing:border-box;outline:none}
+button{background:var(--ac);color:#fff;border:none;padding:0 16px;font-weight:600;cursor:pointer;border-radius:10px;font-size:12.5px;height:44px;flex-shrink:0}
+button:hover{background:var(--ac2)}
+.stop{background:#ef4444;display:none}
+.stop:hover{background:#dc2626}
+.mic{background:rgba(255,255,255,.08);border:1px solid var(--bd);width:44px;padding:0;font-size:16px}
+.mic.on{background:#ef4444;animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+.clr{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);font-size:11px;height:30px}
+</style>
 </head>
 <body>
-
 <div id="game-container">
-    <header>
-        <div class="brand-title">Avatar<span>Box</span> <span style="font-size:10px; background:rgba(16,185,129,0.2); padding:2px 6px; border-radius:4px;">Universal AI Hub</span></div>
-        <div class="header-actions">
-            <button class="icon-btn" onclick="apriImpostazioni()" id="settingsBtn" style="display:none;">⚙️ Impostazioni</button>
-            <div id="header-status" style="color: var(--text-sub); font-size: 11px;"><span class="status-dot"></span>Pronto</div>
-        </div>
-    </header>
-
-    <div id="app-layout">
-        <div id="sidebar">
-            <h3>💬 Cronologia Chat</h3>
-            <button onclick="nuovaChat()" style="padding: 6px; font-size: 11.5px; margin-bottom: 4px; height: 32px;">+ Nuova Chat</button>
-            <div class="history-list" id="historyList"></div>
-            <button onclick="cancellaCronologia()" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px; font-size: 11px; height: 30px;">Pulisci Storico</button>
-        </div>
-
-        <div id="screen">
-            <div id="main-content" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
-                <div class="setup-screen" id="setupScreen">
-                    <div>
-                        <h1>Scegli la tua Intelligenza Artificiale</h1>
-                        <p>Usa i modelli liberi inclusi senza API Key o inserisci la tua chiave per sbloccare qualsiasi provider.</p>
-                    </div>
-                    
-                    <div class="config-grid">
-                        <div class="preview-container">
-                            <div class="avatar-canvas-box" id="preview-canvas-container"></div>
-                            <div style="font-size: 11.5px; text-align: left; color: var(--text-sub);">
-                                <strong style="color: #fff;">Anteprima Live 3D</strong><br>
-                                Gira in tempo reale.
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label>Nome Avatar</label>
-                            <input type="text" id="avatarNameInput" value="Nexus" oninput="aggiornaAnteprimaPreview()">
-                        </div>
-
-                        <div class="input-group">
-                            <label>Lingua IA</label>
-                            <select id="langSelect" onchange="aggiornaVociTTS()">
-                                <option value="it">Italiano</option>
-                                <option value="en">English</option>
-                                <option value="es">Español</option>
-                                <option value="fr">Français</option>
-                                <option value="de">Deutsch</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label>Piattaforma / Fornitore IA</label>
-                            <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
-                                <option value="free">Modelli Liberi (Nessuna API Key necessaria)</option>
-                                <option value="gemini">Google Gemini (Ultime versioni)</option>
-                                <option value="groq">Groq (Ultra Veloce - Richiede Key)</option>
-                                <option value="openrouter">OpenRouter (Tutti i modelli - Richiede Key)</option>
-                                <option value="openai">OpenAI (GPT-4o - Richiede Key)</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label>Modello IA</label>
-                            <select id="modelSelect"></select>
-                        </div>
-
-                        <div class="input-group full-width" id="apiKeyGroup">
-                            <label id="apiKeyLabel">API Key Personale (Opzionale se usi i Modelli Liberi)</label>
-                            <input type="password" id="apiKeyInput" placeholder="Lascia vuoto per usare i modelli liberi o inserisci chiave..." oninput="salvaconfigInTempoReale()">
-                        </div>
-
-                        <div class="input-group">
-                            <label>Voce Sintetica (4 Opzioni)</label>
-                            <select id="voiceSelect"></select>
-                        </div>
-
-                        <div class="input-group full-width">
-                            <label>Gadget & Accessori 3D</label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" id="gadgetGlasses" onchange="aggiornaAnteprimaPreview()"> Occhiali</label>
-                                <label><input type="checkbox" id="gadgetVisor" onchange="aggiornaAnteprimaPreview()"> Visore</label>
-                                <label><input type="checkbox" id="gadgetHeadphones" onchange="aggiornaAnteprimaPreview()"> Cuffie</label>
-                                <label><input type="checkbox" id="gadgetCap" onchange="aggiornaAnteprimaPreview()"> Cappello</label>
-                            </div>
-                        </div>
-
-                        <div class="input-group">
-                            <label>Colore Pelle</label>
-                            <input type="color" id="skinColorInput" value="#e0a96d" onchange="aggiornaAnteprimaPreview()">
-                        </div>
-
-                        <div class="input-group">
-                            <label>Colore Capelli</label>
-                            <input type="color" id="hairColorInput" value="#2d3748" onchange="aggiornaAnteprimaPreview()">
-                        </div>
-
-                        <div class="input-group">
-                            <label>Colore Occhi</label>
-                            <input type="color" id="eyeColorInput" value="#10b981" onchange="aggiornaAnteprimaPreview()">
-                        </div>
-
-                        <div class="input-group">
-                            <label>Colore Labbra</label>
-                            <input type="color" id="lipColorInput" value="#f43f5e" onchange="aggiornaAnteprimaPreview()">
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 6px; padding-bottom: 20px;">
-                        <button onclick="avviaAvatarBoxCloud()" style="width: 100%; height: 48px;">Avvia AvatarBox Hub</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<header>
+  <div class="brand">Avatar<span>Box</span></div>
+  <div class="header-actions">
+    <button class="icon-btn" id="settingsBtn" style="display:none">⚙️ Impostazioni</button>
+    <div id="status" style="color:var(--sub);font-size:11px"><span class="dot"></span>Pronto</div>
+  </div>
+</header>
+<div id="app-layout">
+  <div id="sidebar">
+    <h3>💬 Cronologia Chat</h3>
+    <button id="newChatBtn" style="height:32px;font-size:11.5px">+ Nuova Chat</button>
+    <div class="history-list" id="historyList"></div>
+    <button class="clr" id="clearBtn">Pulisci Storico</button>
+  </div>
+  <div id="screen"><div id="main-content"></div></div>
+</div>
 </div>
 
 <script>
-    let userConfig = {
-        name: "Nexus",
-        lang: "it",
-        provider: "free",
-        model: "openrouter/free",
-        apiKey: "",
-        skin: "#e0a96d",
-        hair: "#2d3748",
-        eyes: "#10b981",
-        lips: "#f43f5e",
-        gadgets: { glasses: false, visor: false, headphones: false, cap: false }
-    };
+const $ = id => document.getElementById(id);
+const CFG_KEY = 'avatarbox_config', CHATS_KEY = 'avatarbox_chats', SKEY = 'avatarbox_key';
+const DEF = {name:"Nexus",lang:"it",provider:"free",model:"openai",apiKey:"",voice:"",pitch:1,
+  skin:"#e0a96d",hair:"#2d3748",eyes:"#10b981",lips:"#f43f5e",
+  gadgets:{glasses:false,visor:false,headphones:false,cap:false}};
+const MODELS = {
+  free:[["openai","Modello libero (Pollinations, senza chiave)"],["mistral","Mistral (Pollinations, senza chiave)"]],
+  openrouter:[["deepseek/deepseek-chat","DeepSeek V3"],["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B (free)"],["anthropic/claude-3.5-sonnet","Claude 3.5 Sonnet"]],
+  groq:[["llama-3.1-8b-instant","Llama 3.1 8B Instant"],["llama-3.3-70b-versatile","Llama 3.3 70B Versatile"]],
+  openai:[["gpt-4o-mini","GPT-4o Mini"],["gpt-4o","GPT-4o"]]
+};
+const ENDPOINTS = {
+  free:"https://text.pollinations.ai/openai",
+  openrouter:"https://openrouter.ai/api/v1/chat/completions",
+  groq:"https://api.groq.com/openai/v1/chat/completions",
+  openai:"https://api.openai.com/v1/chat/completions"
+};
+const LOCALE = {it:'it-IT',en:'en-US',es:'es-ES',fr:'fr-FR',de:'de-DE'};
+const PROMPTS = {
+  it:n=>`Ti chiami ${n}. Sei un assistente virtuale 3D brillante, amichevole e conciso. Rispondi sempre in italiano.`,
+  en:n=>`Your name is ${n}. You are a bright, friendly, and concise 3D virtual assistant. Always respond in English.`,
+  es:n=>`Te llamas ${n}. Eres un asistente virtual 3D brillante, amigable y conciso. Responde siempre en español.`,
+  fr:n=>`Vous vous appelez ${n}. Vous êtes un assistant virtuel 3D brillant, amical et concis. Répondez toujours en français.`,
+  de:n=>`Du heißt ${n}. Du bist ein intelligenter, freundlicher 3D-Assistent. Antworte immer auf Deutsch.`
+};
 
-    let chatHistory = [];
-    let chatsSaved = [];
-    let currentChatId = null;
+let cfg = JSON.parse(JSON.stringify(DEF));
+try { const s = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); Object.assign(cfg, s); cfg.gadgets = {...DEF.gadgets, ...s.gadgets}; } catch(e) {}
+try { cfg.apiKey = sessionStorage.getItem(SKEY) || ''; } catch(e) {}
 
-    let activeRenderer = null;
-    let activeScene = null;
-    let activeCamera = null;
-    let activeGroup = null;
-    let staParlando = false;
-    let animFrameId = null;
-    let isAppRunning = false;
-    let stopGenerazioneFlag = false;
+let chatHistory = [], currentChatId = null;
+let renderer = null, scene = null, camera = null, group = null, animId = null;
+let running = false, speaking = false, stopFlag = false, abortCtl = null, avatarSnap = '', recognition = null;
 
-    const savedConfig = localStorage.getItem('avatarbox_universal_config');
-    if(savedConfig) {
+function saveCfg() {
+  const {apiKey, ...rest} = cfg;
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(rest)); } catch(e) {}
+  try { sessionStorage.setItem(SKEY, apiKey || ''); } catch(e) {}
+}
+
+/* ---------- Avatar 3D ---------- */
+function faceTexture(c) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const x = cv.getContext('2d'); x.fillStyle = "#0d1117"; x.fillRect(0,0,128,128);
+  const P = [[0,0,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1],[1,1,2,2,2,2,2,2,2,2,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,1],[1,2,4,3,2,2,2,2,4,3,2,1],[1,2,2,2,2,2,2,2,2,2,2,1],[1,2,2,2,2,1,1,2,2,2,2,1],
+    [0,2,2,2,6,6,6,6,2,2,2,0],[0,2,2,2,2,2,2,2,2,2,2,0],[0,0,2,2,2,2,2,2,2,2,0,0],[0,0,0,1,1,1,1,1,1,0,0,0]];
+  const colors = {1:c.hair,2:c.skin,3:c.eyes,4:"#ffffff",6:c.lips}, s = 128/12;
+  P.forEach((row,r) => row.forEach((v,k) => { if(v){ x.fillStyle = colors[v]; x.fillRect(k*s, r*s, s, s); } }));
+  const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; return t;
+}
+
+function buildAvatar(c) {
+  const g = new THREE.Group(), M = o => new THREE.MeshStandardMaterial(o);
+  const box = (w,h,d,mat,x,y,z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); m.position.set(x,y,z); g.add(m); return m; };
+  const hm = M({color:c.hair});
+  const head = new THREE.Mesh(new THREE.BoxGeometry(1.8,1.8,1.8), [hm,hm,hm,M({color:c.skin}),M({map:faceTexture(c)}),hm]);
+  g.add(head);
+  if (c.gadgets.glasses) box(1.4,.35,.2,M({color:0x111111,roughness:.2}),0,.1,.95);
+  if (c.gadgets.visor) box(1.6,.45,.3,M({color:0x00f3ff,emissive:0x00f3ff,emissiveIntensity:.6}),0,.15,.92);
+  if (c.gadgets.headphones) { const h = M({color:0xe11d48}); box(.25,.6,.6,h,-1,.1,0); box(.25,.6,.6,h,1,.1,0); box(2.1,.15,.2,h,0,1,0); }
+  if (c.gadgets.cap) { const h = M({color:0x1e40af}); box(1.9,.3,1.9,h,0,1,0); box(1.6,.08,.7,h,0,.88,1.1); }
+  return g;
+}
+
+function disposeRenderer() {
+  if (animId) cancelAnimationFrame(animId);
+  animId = null;
+  if (renderer) { renderer.dispose(); renderer = null; }
+  scene = camera = group = null;
+}
+
+function initRenderer(id, size) {
+  const box = $(id); if (!box) return;
+  disposeRenderer();
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, 1, .1, 1000); camera.position.z = 3.6;
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setSize(size, size);
+  box.innerHTML = ""; box.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff, .9));
+  const pl = new THREE.PointLight(0xffffff, 1.2); pl.position.set(5,5,5); scene.add(pl);
+  group = buildAvatar(cfg); scene.add(group);
+  (function loop() {
+    animId = requestAnimationFrame(loop);
+    if (group) {
+      if (running) { group.rotation.y += speaking ? .035 : .008; group.rotation.x = Math.sin(Date.now()*.003)*.12; }
+      else group.rotation.y += .012;
+    }
+    renderer.render(scene, camera);
+  })();
+}
+
+function snapshotAvatar() {
+  try {
+    const r = new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:true});
+    r.setSize(72, 72);
+    const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(45,1,.1,1000); cam.position.z = 3.6;
+    s.add(new THREE.AmbientLight(0xffffff,.9));
+    const pl = new THREE.PointLight(0xffffff,1.2); pl.position.set(5,5,5); s.add(pl);
+    s.add(buildAvatar(cfg)); r.render(s, cam);
+    avatarSnap = r.domElement.toDataURL('image/png'); r.dispose();
+  } catch(e) { avatarSnap = ''; }
+}
+
+function refreshPreview() {
+  readForm();
+  if (scene && group) { scene.remove(group); group = buildAvatar(cfg); scene.add(group); }
+}
+
+/* ---------- Form impostazioni ---------- */
+function renderSetup(isSettings) {
+  running = false;
+  stopSpeech();
+  $('settingsBtn').style.display = 'none';
+  $('main-content').innerHTML = `
+  <div class="setup">
+    <div><h1>${isSettings ? 'Impostazioni & Selezione IA' : 'Configura il tuo Avatar 3D'}</h1>
+    <p>Modalità libera senza chiave, oppure inserisci la tua chiave personale.</p></div>
+    <div class="grid">
+      <div class="preview"><div class="abox" id="prevBox"></div><div><strong style="color:#fff">Anteprima Live 3D</strong><br>Gira in tempo reale.</div></div>
+      <div class="ig"><label>Nome Avatar</label><input type="text" id="f_name"></div>
+      <div class="ig"><label>Lingua IA</label><select id="f_lang">
+        <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option></select></div>
+      <div class="ig"><label>Piattaforma / Fornitore IA</label><select id="f_provider">
+        <option value="free">Modelli Liberi (Senza API Key)</option><option value="openrouter">OpenRouter (Richiede Key)</option>
+        <option value="groq">Groq (Richiede Key)</option><option value="openai">OpenAI (Richiede Key)</option></select></div>
+      <div class="ig"><label>Modello IA</label><select id="f_model"></select></div>
+      <div class="ig full"><label>API Key (solo per i fornitori a pagamento; resta nella sessione del browser)</label>
+        <input type="password" id="f_key" autocomplete="off" placeholder="Non necessaria in modalità libera"></div>
+      <div class="ig"><label>Voce Sintetica</label><select id="f_voice"></select></div>
+      <div class="ig full"><label>Gadget & Accessori 3D</label><div class="checks">
+        <label><input type="checkbox" id="g_glasses"> Occhiali</label><label><input type="checkbox" id="g_visor"> Visore</label>
+        <label><input type="checkbox" id="g_headphones"> Cuffie</label><label><input type="checkbox" id="g_cap"> Cappello</label></div></div>
+      <div class="ig"><label>Colore Pelle</label><input type="color" id="c_skin"></div>
+      <div class="ig"><label>Colore Capelli</label><input type="color" id="c_hair"></div>
+      <div class="ig"><label>Colore Occhi</label><input type="color" id="c_eyes"></div>
+      <div class="ig"><label>Colore Labbra</label><input type="color" id="c_lips"></div>
+    </div>
+    <div style="padding-bottom:20px"><button id="goBtn" style="width:100%;height:48px">${isSettings ? 'Salva & Torna alla Chat' : 'Avvia AvatarBox'}</button></div>
+  </div>`;
+  $('f_name').value = cfg.name; $('f_lang').value = cfg.lang; $('f_provider').value = cfg.provider; $('f_key').value = cfg.apiKey;
+  ['glasses','visor','headphones','cap'].forEach(k => $('g_'+k).checked = cfg.gadgets[k]);
+  ['skin','hair','eyes','lips'].forEach(k => $('c_'+k).value = cfg[k]);
+  fillModels(); fillVoices();
+  $('f_provider').onchange = () => { cfg.model = ''; fillModels(); };
+  $('f_lang').onchange = () => { cfg.voice = ''; readForm(); fillVoices(); };
+  $('f_voice').onchange = pickVoice;
+  $('f_name').oninput = $('f_key').oninput = refreshPreview;
+  document.querySelectorAll('.setup input[type=color],.setup .checks input').forEach(e => e.onchange = refreshPreview);
+  $('goBtn').onclick = startChat;
+  initRenderer('prevBox', 75);
+}
+
+function fillModels() {
+  const p = $('f_provider').value, sel = $('f_model'); sel.innerHTML = "";
+  MODELS[p].forEach(([v,l]) => sel.add(new Option(l, v)));
+  if (MODELS[p].some(m => m[0] === cfg.model)) sel.value = cfg.model;
+}
+
+function readForm() {
+  if (!$('f_name')) return;
+  cfg.name = $('f_name').value.trim() || "Nexus";
+  cfg.lang = $('f_lang').value; cfg.provider = $('f_provider').value;
+  cfg.model = $('f_model').value; cfg.apiKey = $('f_key').value.trim();
+  ['skin','hair','eyes','lips'].forEach(k => cfg[k] = $('c_'+k).value);
+  ['glasses','visor','headphones','cap'].forEach(k => cfg.gadgets[k] = $('g_'+k).checked);
+}
+
+/* ---------- Voci ---------- */
+const FEM = /female|woman|zira|elsa|alice|elena|paola|federica|lucia|monica|helena|amelie|marie|paulina|hedda|katja|samantha|google.*(italiano|español|français|deutsch)/i;
+const MALE = /\bmale\b|\bman\b|david|giorgio|luca|cosimo|diego|jorge|thomas|claude|stefan|conrad|daniel|mark/i;
+
+function fillVoices() {
+  const sel = $('f_voice'); if (!sel) return;
+  sel.innerHTML = "";
+  if (!('speechSynthesis' in window)) { sel.add(new Option("Sintesi vocale non supportata", "")); return; }
+  const all = speechSynthesis.getVoices(), lang = $('f_lang').value;
+  let vs = all.filter(v => v.lang.toLowerCase().startsWith(lang)); if (!vs.length) vs = all;
+  const opts = []; let f = 0, m = 0;
+  vs.forEach(v => {
+    if (FEM.test(v.name) && f < 2) { f++; opts.push([v.name, `👩 [Femmina ${f}] ${v.name}`, 1]); }
+    else if (!FEM.test(v.name) && MALE.test(v.name) && m < 2) { m++; opts.push([v.name, `👨 [Maschio ${m}] ${v.name}`, 1]); }
+  });
+  const base = vs[0] ? vs[0].name : "";
+  while (f < 2) { f++; opts.push([base, `👩 [Femmina ${f}] Standard`, 1.25 + (f-1)*.15]); }
+  while (m < 2) { m++; opts.push([base, `👨 [Maschio ${m}] Standard`, .8 - (m-1)*.15]); }
+  opts.forEach(([name,label,pitch]) => { const o = new Option(label, name); o.dataset.pitch = pitch; sel.add(o); });
+  const idx = [...sel.options].findIndex(o => o.text === cfg.voiceLabel);
+  if (idx >= 0) sel.selectedIndex = idx;
+  pickVoice();
+}
+
+function pickVoice() {
+  const sel = $('f_voice'), o = sel && sel.options[sel.selectedIndex];
+  if (!o) return;
+  cfg.voice = o.value; cfg.pitch = parseFloat(o.dataset.pitch || 1); cfg.voiceLabel = o.text;
+}
+
+function stopSpeech() { if ('speechSynthesis' in window) speechSynthesis.cancel(); speaking = false; }
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[*#_~`]/g, ''));
+  u.lang = LOCALE[cfg.lang] || 'it-IT'; u.pitch = cfg.pitch || 1;
+  const v = speechSynthesis.getVoices().find(v => v.name === cfg.voice);
+  if (v) u.voice = v;
+  speaking = true;
+  u.onend = u.onerror = () => { speaking = false; };
+  speechSynthesis.speak(u);
+}
+
+/* ---------- Cronologia ---------- */
+function loadChats() { try { return JSON.parse(localStorage.getItem(CHATS_KEY) || '[]'); } catch(e) { return []; } }
+
+function renderSidebar() {
+  const list = $('historyList'), chats = loadChats(); list.innerHTML = "";
+  if (!chats.length) { const d = document.createElement('div'); d.style.cssText = "font-size:11px;color:var(--sub);text-align:center;padding:10px"; d.textContent = "Nessuna chat salvata"; list.appendChild(d); return; }
+  chats.forEach(c => {
+    const d = document.createElement('div'); d.className = 'history-item';
+    d.textContent = `${c.name} (${new Date(c.id).toLocaleDateString()})`;
+    d.onclick = () => restoreChat(c.id);
+    list.appendChild(d);
+  });
+}
+
+function saveChat() {
+  if (!currentChatId) currentChatId = Date.now();
+  const {apiKey, ...config} = cfg;
+  const data = {id: currentChatId, name: cfg.name, config, messages: chatHistory};
+  const list = loadChats(), i = list.findIndex(c => c.id === currentChatId);
+  if (i >= 0) list[i] = data; else list.unshift(data);
+  try { localStorage.setItem(CHATS_KEY, JSON.stringify(list)); } catch(e) {}
+  renderSidebar();
+}
+
+function restoreChat(id) {
+  const c = loadChats().find(c => c.id === id); if (!c) return;
+  currentChatId = c.id; chatHistory = c.messages;
+  cfg = {...cfg, ...c.config, gadgets: {...DEF.gadgets, ...c.config.gadgets}};
+  openChat(true);
+}
+
+/* ---------- Chat ---------- */
+function startChat() {
+  readForm(); pickVoice();
+  if (cfg.provider !== 'free' && !cfg.apiKey) { alert("Per questo fornitore serve una API key."); return; }
+  saveCfg();
+  openChat(chatHistory.length > 0);
+}
+
+function openChat(restore) {
+  running = true;
+  snapshotAvatar();
+  $('settingsBtn').style.display = 'inline-block';
+  $('main-content').innerHTML = `
+    <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name)}</strong><br><span style="font-size:11px;color:var(--sub)">Modalità: ${cfg.provider === 'free' ? 'Modelli Liberi' : cfg.provider.toUpperCase()}</span></div></div>
+    <div class="chat" id="chatBox"></div>
+    <div class="banner">📢 <strong>AvatarBox</strong> — ${esc(cfg.model)}</div>
+    <div class="input-row">
+      <button class="mic" id="micBtn" title="Dettatura Vocale">🎤</button>
+      <textarea id="userInput"></textarea>
+      <button id="sendBtn">Invia</button><button class="stop" id="stopBtn">Interrompi</button>
+    </div>`;
+  $('liveBox').style.cssText = "width:56px;height:56px";
+  $('userInput').placeholder = "Scrivi a " + cfg.name + "...";
+  $('status').innerHTML = '<span class="dot"></span>AvatarBox Attivo';
+  initRenderer('liveBox', 56);
+
+  const sys = PROMPTS[cfg.lang] || PROMPTS.it;
+  if (chatHistory[0] && chatHistory[0].role === 'system') chatHistory[0].content = sys(cfg.name);
+  else chatHistory.unshift({role:"system", content: sys(cfg.name)});
+
+  if (restore) chatHistory.forEach(m => {
+    if (m.role === 'user') addMsg('user', m.content);
+    else if (m.role === 'assistant') setBubble(addMsg('assistant', ''), 'assistant', m.content, true);
+  });
+  else addMsg('assistant', `Pronto! Connesso in modalità ${cfg.provider.toUpperCase()}.`);
+
+  $('sendBtn').onclick = sendMessage;
+  $('stopBtn').onclick = () => { stopFlag = true; if (abortCtl) abortCtl.abort(); stopSpeech(); };
+  $('micBtn').onclick = toggleMic;
+  $('userInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  saveChat();
+}
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function addMsg(role, text) {
+  const row = document.createElement('div'); row.className = 'message-row' + (role === 'user' ? ' me' : '');
+  if (role !== 'user') { const img = document.createElement('img'); img.className = 'mini'; img.alt = ''; if (avatarSnap) img.src = avatarSnap; row.appendChild(img); }
+  const b = document.createElement('div'); b.className = 'message-bubble' + (role === 'user' ? ' user' : '');
+  row.appendChild(b); $('chatBox').appendChild(row);
+  setBubble(b, role, text);
+  $('chatBox').scrollTop = $('chatBox').scrollHeight;
+  return b;
+}
+
+function setBubble(b, role, text, withTTS) {
+  b.textContent = "";
+  const s = document.createElement('strong'); s.textContent = (role === 'user' ? 'Tu' : cfg.name) + ': ';
+  b.append(s, text);
+  if (withTTS) {
+    const t = document.createElement('button'); t.className = 'tts'; t.textContent = '🔊 Ascolta';
+    t.onclick = () => speak(text); b.appendChild(t);
+  }
+}
+
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert("Riconoscimento vocale non supportato da questo browser."); return; }
+  const btn = $('micBtn');
+  if (recognition) { recognition.stop(); return; }
+  recognition = new SR(); recognition.lang = LOCALE[cfg.lang] || 'it-IT';
+  recognition.onstart = () => btn.classList.add('on');
+  recognition.onresult = e => { $('userInput').value = e.results[0][0].transcript; };
+  recognition.onerror = recognition.onend = () => { btn.classList.remove('on'); recognition = null; };
+  recognition.start();
+}
+
+async function sendMessage() {
+  const input = $('userInput'), text = input.value.trim();
+  if (!text || abortCtl) return;
+  input.value = "";
+  stopSpeech();
+  addMsg('user', text);
+  chatHistory.push({role:"user", content:text});
+  const bubble = addMsg('assistant', '…');
+  $('sendBtn').style.display = 'none'; $('stopBtn').style.display = 'inline-block';
+  stopFlag = false; abortCtl = new AbortController();
+
+  const headers = {"Content-Type":"application/json"};
+  if (cfg.provider !== 'free') headers.Authorization = "Bearer " + cfg.apiKey;
+  let full = "";
+
+  const finish = () => {
+    if (!full) full = "(Generazione interrotta)";
+    chatHistory.push({role:"assistant", content:full});
+    setBubble(bubble, 'assistant', full, true);
+    if (!stopFlag) speak(full);
+    saveChat();
+  };
+
+  try {
+    const res = await fetch(ENDPOINTS[cfg.provider], {
+      method:"POST", headers, signal: abortCtl.signal,
+      body: JSON.stringify({model: cfg.model, messages: chatHistory, stream: true})
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0,300) || res.statusText}`);
+    const reader = res.body.getReader(), dec = new TextDecoder("utf-8");
+    let buf = "";
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, {stream:true});
+      const lines = buf.split("\n"); buf = lines.pop();
+      for (const l of lines) {
+        const t = l.trim();
+        if (!t.startsWith("data:")) continue;
+        const d = t.slice(5).trim();
+        if (d === "[DONE]") continue;
         try {
-            userConfig = JSON.parse(savedConfig);
+          full += JSON.parse(d).choices?.[0]?.delta?.content || "";
+          setBubble(bubble, 'assistant', full);
+          $('chatBox').scrollTop = $('chatBox').scrollHeight;
         } catch(e) {}
+      }
     }
-
-    function creaTextureVolto(c) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = "#0d1117";
-        ctx.fillRect(0, 0, 128, 128);
-
-        let pattern = [
-            [0,0,1,1,1,1,1,1,1,1,0,0],
-            [0,1,1,1,1,1,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,2,2,2,2,2,2,2,2,1,1],
-            [1,2,2,2,2,2,2,2,2,2,2,1],
-            [1,2,4,3,2,2,2,2,4,3,2,1],
-            [1,2,2,2,2,2,2,2,2,2,2,1],
-            [1,2,2,2,2,1,1,2,2,2,2,1],
-            [0,2,2,2,6,6,6,6,2,2,2,0],
-            [0,2,2,2,2,2,2,2,2,2,2,0],
-            [0,0,2,2,2,2,2,2,2,2,0,0],
-            [0,0,0,1,1,1,1,1,1,0,0,0]
-        ];
-
-        let pixelSize = 128 / 12;
-        for(let r=0; r<12; r++) {
-            for(let col=0; col<12; col++) {
-                let val = pattern[r][col];
-                if(val === 0) continue;
-                if(val === 1) ctx.fillStyle = c.hair;
-                if(val === 2) ctx.fillStyle = c.skin;
-                if(val === 3) ctx.fillStyle = c.eyes;
-                if(val === 4) ctx.fillStyle = "#ffffff";
-                if(val === 5 || val === 6) ctx.fillStyle = c.lips;
-                ctx.fillRect(col * pixelSize, r * pixelSize, pixelSize, pixelSize);
-            }
-        }
-        return new THREE.CanvasTexture(canvas);
+    finish();
+  } catch(e) {
+    if (e.name === 'AbortError') finish();
+    else {
+      chatHistory.pop();
+      bubble.textContent = ""; const s = document.createElement('span'); s.style.color = "#f87171";
+      s.textContent = "Errore API: " + e.message; bubble.appendChild(s);
     }
-
-    function costruisciAvatarGroup(c) {
-        const group = new THREE.Group();
-        const texture = creaTextureVolto(c);
-        const materials = [
-            new THREE.MeshStandardMaterial({ color: c.hair }),
-            new THREE.MeshStandardMaterial({ color: c.hair }),
-            new THREE.MeshStandardMaterial({ color: c.hair }),
-            new THREE.MeshStandardMaterial({ color: c.skin }),
-            new THREE.MeshStandardMaterial({ map: texture }),
-            new THREE.MeshStandardMaterial({ color: c.hair })
-        ];
-
-        const headMesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 1.8), materials);
-        group.add(headMesh);
-
-        if(c.gadgets.glasses) {
-            const gMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
-            const glasses = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.35, 0.2), gMat);
-            glasses.position.set(0, 0.1, 0.95);
-            group.add(glasses);
-        }
-
-        if(c.gadgets.visor) {
-            const vMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00f3ff, emissiveIntensity: 0.6 });
-            const visor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.3), vMat);
-            visor.position.set(0, 0.15, 0.92);
-            group.add(visor);
-        }
-
-        if(c.gadgets.headphones) {
-            const hMat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
-            const cupL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.6, 0.6), hMat);
-            cupL.position.set(-1.0, 0.1, 0);
-            const cupR = cupL.clone();
-            cupR.position.set(1.0, 0.1, 0);
-            const band = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.15, 0.2), hMat);
-            band.position.set(0, 1.0, 0);
-            group.add(cupL); group.add(cupR); group.add(band);
-        }
-
-        if(c.gadgets.cap) {
-            const cMat = new THREE.MeshStandardMaterial({ color: 0x1e40af });
-            const capBase = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.3, 1.9), cMat);
-            capBase.position.set(0, 1.0, 0);
-            const visorPart = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.7), cMat);
-            visorPart.position.set(0, 0.88, 1.1);
-            group.add(capBase); group.add(visorPart);
-        }
-
-        return group;
-    }
-
-    function initAvatarRenderer(containerId) {
-        const container = document.getElementById(containerId);
-        if(!container) return;
-
-        if(animFrameId) cancelAnimationFrame(animFrameId);
-
-        activeScene = new THREE.Scene();
-        activeCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        activeCamera.position.z = 3.6;
-
-        activeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        activeRenderer.setSize(75, 75);
-        container.innerHTML = "";
-        container.appendChild(activeRenderer.domElement);
-
-        activeScene.add(new THREE.AmbientLight(0xffffff, 0.9));
-        const pointLight = new THREE.PointLight(0xffffff, 1.2);
-        pointLight.position.set(5, 5, 5);
-        activeScene.add(pointLight);
-
-        activeGroup = costruisciAvatarGroup(userConfig);
-        activeScene.add(activeGroup);
-
-        function renderLoop() {
-            animFrameId = requestAnimationFrame(renderLoop);
-            if(activeGroup) {
-                if(isAppRunning) {
-                    activeGroup.rotation.y += staParlando ? 0.035 : 0.008;
-                    activeGroup.rotation.x = Math.sin(Date.now() * 0.003) * 0.12;
-                } else {
-                    activeGroup.rotation.y += 0.012;
-                }
-            }
-            if(activeRenderer && activeScene && activeCamera) {
-                activeRenderer.render(activeScene, activeCamera);
-            }
-        }
-        renderLoop();
-    }
-
-    window.aggiornaModelliDisponibili = function() {
-        const provider = document.getElementById('providerSelect')?.value || userConfig.provider;
-        const modelSelect = document.getElementById('modelSelect');
-        if(!modelSelect) return;
-        modelSelect.innerHTML = "";
-
-        let opzioni = [];
-        if(provider === 'free') {
-            opzioni = [
-                {val: "openrouter/free", label: "🌟 OpenRouter Free Pool (Consigliato / Sempre Libero)"},
-                {val: "deepseek/deepseek-chat:free", label: "DeepSeek V3 Free (OpenRouter)"},
-                {val: "meta-llama/llama-3.1-8b-instruct:free", label: "Llama 3.1 8B Free (OpenRouter)"},
-                {val: "google/gemma-2-9b-it:free", label: "Gemma 2 9B Free (Google)"}
-            ];
-        } else if(provider === 'gemini') {
-            opzioni = [
-                {val: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Ultimo / Consigliato)"},
-                {val: "gemini-4-argon", label: "Gemini 4 Argon (Top di gamma & Ragionamento)"},
-                {val: "gemini-3.1-pro", label: "Gemini 3.1 Pro"},
-                {val: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite"}
-            ];
-        } else if(provider === 'groq') {
-            opzioni = [
-                {val: "llama-3.1-8b-instant", label: "Llama 3.1 8B (Groq Ultra Veloce)"},
-                {val: "llama-3.3-70b-versatile", label: "Llama 3.3 70B (Groq Avanzato)"},
-                {val: "mixtral-8x7b-32768", label: "Mixtral 8x7B (Groq)"}
-            ];
-        } else if(provider === 'openai') {
-            opzioni = [
-                {val: "gpt-4o-mini", label: "GPT-4o Mini (OpenAI)"},
-                {val: "gpt-4o", label: "GPT-4o (OpenAI Avanzato)"}
-            ];
-        } else if(provider === 'openrouter') {
-            opzioni = [
-                {val: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet (Anthropic)"},
-                {val: "deepseek/deepseek-chat", label: "DeepSeek V3 (Standard)"},
-                {val: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B"}
-            ];
-        }
-
-        opzioni.forEach(opt => {
-            const el = document.createElement('option');
-            el.value = opt.val;
-            el.text = opt.label;
-            modelSelect.add(el);
-        });
-        if(userConfig.model) modelSelect.value = userConfig.model;
-    };
-
-    window.aggiornaAnteprimaPreview = function() {
-        userConfig.name = document.getElementById('avatarNameInput')?.value || "Nexus";
-        userConfig.lang = document.getElementById('langSelect')?.value || "it";
-        userConfig.skin = document.getElementById('skinColorInput')?.value || "#e0a96d";
-        userConfig.hair = document.getElementById('hairColorInput')?.value || "#2d3748";
-        userConfig.eyes = document.getElementById('eyeColorInput')?.value || "#10b981";
-        userConfig.lips = document.getElementById('lipColorInput')?.value || "#f43f5e";
-
-        userConfig.gadgets = {
-            glasses: document.getElementById('gadgetGlasses')?.checked || false,
-            visor: document.getElementById('gadgetVisor')?.checked || false,
-            headphones: document.getElementById('gadgetHeadphones')?.checked || false,
-            cap: document.getElementById('gadgetCap')?.checked || false
-        };
-
-        if(activeGroup && activeScene) {
-            activeScene.remove(activeGroup);
-            activeGroup = costruisciAvatarGroup(userConfig);
-            activeScene.add(activeGroup);
-        }
-    };
-
-    window.salvaconfigInTempoReale = function() {
-        userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || "";
-        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
-    };
-
-    window.aggiornaVociTTS = function() {
-        const lang = document.getElementById('langSelect')?.value || "it";
-        const voiceSelect = document.getElementById('voiceSelect');
-        if(!voiceSelect) return;
-        voiceSelect.innerHTML = "";
-
-        if (!('speechSynthesis' in window)) return;
-        const voices = window.speechSynthesis.getVoices();
-        let langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(lang));
-        if (langVoices.length === 0) langVoices = voices;
-
-        let femCount = 0;
-        let maleCount = 0;
-        const optionsList = [];
-
-        langVoices.forEach(v => {
-            const nameLower = v.name.toLowerCase();
-            const isFem = nameLower.includes('female') || nameLower.includes('woman') || nameLower.includes('girl') || nameLower.includes('zira') || nameLower.includes('alice');
-            const isMale = nameLower.includes('male') || nameLower.includes('man') || nameLower.includes('david') || nameLower.includes('giorgio');
-
-            if (isFem && femCount < 2) {
-                femCount++;
-                optionsList.push({ voice: v, label: `👩 [Femmina ${femCount}] ${v.name}` });
-            } else if (isMale && maleCount < 2) {
-                maleCount++;
-                optionsList.push({ voice: v, label: `👨 [Maschio ${maleCount}] ${v.name}` });
-            }
-        });
-
-        while (optionsList.length < 4) {
-            if (femCount < 2) {
-                femCount++;
-                optionsList.push({ voice: langVoices[0] || null, label: `👩 [Femmina ${femCount}] Standard`, pitch: 1.3 });
-            } else {
-                maleCount++;
-                optionsList.push({ voice: langVoices[0] || null, label: `👨 [Maschio ${maleCount}] Standard`, pitch: 0.7 });
-            }
-        }
-
-        optionsList.forEach((item, index) => {
-            const opt = document.createElement('option');
-            opt.value = item.voice ? item.voice.name : `fallback-${index}`;
-            opt.dataset.pitch = item.pitch || 1.0;
-            opt.text = item.label;
-            voiceSelect.add(opt);
-        });
-    };
-
-    function caricaStoricoSidebar() {
-        const historyList = document.getElementById('historyList');
-        if(!historyList) return;
-        const saved = localStorage.getItem('avatarbox_universal_chats');
-        chatsSaved = saved ? JSON.parse(saved) : [];
-
-        historyList.innerHTML = "";
-        if(chatsSaved.length === 0) {
-            historyList.innerHTML = `<div style="font-size:11px; color:var(--text-sub); text-align:center; padding: 10px;">Nessuna chat salvata</div>`;
-            return;
-        }
-
-        chatsSaved.forEach(chat => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerText = `${chat.name} (${new Date(chat.id).toLocaleDateString()})`;
-            div.onclick = () => ripristinaChat(chat.id);
-            historyList.appendChild(div);
-        });
-    }
-
-    window.nuovaChat = function() {
-        currentChatId = null;
-        chatHistory = [];
-        location.reload();
-    };
-
-    window.cancellaCronologia = function() {
-        if(confirm("Vuoi cancellare tutte le chat salvate in locale?")) {
-            localStorage.removeItem('avatarbox_universal_chats');
-            caricaStoricoSidebar();
-        }
-    };
-
-    function salvaChatCorrente() {
-        if(!currentChatId) currentChatId = Date.now();
-        const chatData = {
-            id: currentChatId,
-            name: userConfig.name,
-            config: userConfig,
-            messages: chatHistory
-        };
-
-        let saved = localStorage.getItem('avatarbox_universal_chats');
-        let list = saved ? JSON.parse(saved) : [];
-        
-        const index = list.findIndex(c => c.id === currentChatId);
-        if(index >= 0) {
-            list[index] = chatData;
-        } else {
-            list.unshift(chatData);
-        }
-
-        localStorage.setItem('avatarbox_universal_chats', JSON.stringify(list));
-        caricaStoricoSidebar();
-    }
-
-    function ripristinaChat(id) {
-        const saved = localStorage.getItem('avatarbox_universal_chats');
-        if(!saved) return;
-        const list = JSON.parse(saved);
-        const chat = list.find(c => c.id === id);
-        if(!chat) return;
-
-        currentChatId = chat.id;
-        userConfig = chat.config;
-        chatHistory = chat.messages;
-
-        avviaAvatarBoxCloud(true);
-    }
-
-    window.apriImpostazioni = function() {
-        isAppRunning = false;
-        document.getElementById('settingsBtn').style.display = 'none';
-
-        const mainContent = document.getElementById('main-content');
-        mainContent.innerHTML = `
-            <div class="setup-screen" id="setupScreen">
-                <div>
-                    <h1>Impostazioni & Selezione IA</h1>
-                    <p>Modifica fornitore, modelli liberi o aspetto dell'avatar.</p>
-                </div>
-                
-                <div class="config-grid">
-                    <div class="preview-container">
-                        <div class="avatar-canvas-box" id="preview-canvas-container"></div>
-                        <div style="font-size: 11.5px; text-align: left; color: var(--text-sub);">
-                            <strong style="color: #fff;">Anteprima Live 3D</strong><br>
-                            Aggiornamento istantaneo.
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Nome Avatar</label>
-                        <input type="text" id="avatarNameInput" value="${userConfig.name}" oninput="aggiornaAnteprimaPreview()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Lingua IA</label>
-                        <select id="langSelect" onchange="aggiornaVociTTS()">
-                            <option value="it" ${userConfig.lang==='it'?'selected':''}>Italiano</option>
-                            <option value="en" ${userConfig.lang==='en'?'selected':''}>English</option>
-                            <option value="es" ${userConfig.lang==='es'?'selected':''}>Español</option>
-                            <option value="fr" ${userConfig.lang==='fr'?'selected':''}>Français</option>
-                            <option value="de" ${userConfig.lang==='de'?'selected':''}>Deutsch</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Piattaforma / Fornitore IA</label>
-                        <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
-                            <option value="free" ${userConfig.provider==='free'?'selected':''}>Modelli Liberi (Senza API Key)</option>
-                            <option value="gemini" ${userConfig.provider==='gemini'?'selected':''}>Google Gemini</option>
-                            <option value="groq" ${userConfig.provider==='groq'?'selected':''}>Groq</option>
-                            <option value="openrouter" ${userConfig.provider==='openrouter'?'selected':''}>OpenRouter</option>
-                            <option value="openai" ${userConfig.provider==='openai'?'selected':''}>OpenAI</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Modello IA</label>
-                        <select id="modelSelect"></select>
-                    </div>
-
-                    <div class="input-group full-width">
-                        <label>API Key (Opzionale per modelli liberi)</label>
-                        <input type="password" id="apiKeyInput" value="${userConfig.apiKey}" oninput="salvaconfigInTempoReale()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Voce Sintetica (4 Opzioni)</label>
-                        <select id="voiceSelect"></select>
-                    </div>
-
-                    <div class="input-group full-width">
-                        <label>Gadget & Accessori 3D</label>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" id="gadgetGlasses" ${userConfig.gadgets.glasses?'checked':''} onchange="aggiornaAnteprimaPreview()"> Occhiali</label>
-                            <label><input type="checkbox" id="gadgetVisor" ${userConfig.gadgets.visor?'checked':''} onchange="aggiornaAnteprimaPreview()"> Visore</label>
-                            <label><input type="checkbox" id="gadgetHeadphones" ${userConfig.gadgets.headphones?'checked':''} onchange="aggiornaAnteprimaPreview()"> Cuffie</label>
-                            <label><input type="checkbox" id="gadgetCap" ${userConfig.gadgets.cap?'checked':''} onchange="aggiornaAnteprimaPreview()"> Cappello</label>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Colore Pelle</label>
-                        <input type="color" id="skinColorInput" value="${userConfig.skin}" onchange="aggiornaAnteprimaPreview()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Colore Capelli</label>
-                        <input type="color" id="hairColorInput" value="${userConfig.hair}" onchange="aggiornaAnteprimaPreview()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Colore Occhi</label>
-                        <input type="color" id="eyeColorInput" value="${userConfig.eyes}" onchange="aggiornaAnteprimaPreview()">
-                    </div>
-
-                    <div class="input-group">
-                        <label>Colore Labbra</label>
-                        <input type="color" id="lipColorInput" value="${userConfig.lips}" onchange="aggiornaAnteprimaPreview()">
-                    </div>
-                </div>
-
-                <div style="margin-top: 6px; padding-bottom: 20px;">
-                    <button onclick="riprendiChatDaImpostazioni()" style="width: 100%; height: 48px;">Salva & Torna alla Chat</button>
-                </div>
-            </div>
-        `;
-
-        aggiornaModelliDisponibili();
-        initAvatarRenderer('preview-canvas-container');
-        aggiornaVociTTS();
-    };
-
-    window.riprendiChatDaImpostazioni = function() {
-        userConfig.name = document.getElementById('avatarNameInput').value || "Nexus";
-        userConfig.lang = document.getElementById('langSelect').value;
-        userConfig.provider = document.getElementById('providerSelect').value;
-        userConfig.model = document.getElementById('modelSelect').value;
-        userConfig.apiKey = document.getElementById('apiKeyInput').value.trim();
-        userConfig.skin = document.getElementById('skinColorInput').value;
-        userConfig.hair = document.getElementById('hairColorInput').value;
-        userConfig.eyes = document.getElementById('eyeColorInput').value;
-        userConfig.lips = document.getElementById('lipColorInput').value;
-        userConfig.gadgets = {
-            glasses: document.getElementById('gadgetGlasses').checked,
-            visor: document.getElementById('gadgetVisor').checked,
-            headphones: document.getElementById('gadgetHeadphones').checked,
-            cap: document.getElementById('gadgetCap').checked
-        };
-
-        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
-        avviaAvatarBoxCloud(true);
-    };
-
-    window.avviaAvatarBoxCloud = function(isRestore = false) {
-        userConfig.name = document.getElementById('avatarNameInput')?.value || userConfig.name;
-        userConfig.lang = document.getElementById('langSelect')?.value || userConfig.lang;
-        userConfig.provider = document.getElementById('providerSelect')?.value || userConfig.provider;
-        userConfig.model = document.getElementById('modelSelect')?.value || userConfig.model;
-        userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || userConfig.apiKey;
-
-        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
-        isAppRunning = true;
-        document.getElementById('settingsBtn').style.display = 'inline-block';
-
-        const mainContent = document.getElementById('main-content');
-        mainContent.innerHTML = `
-            <div class="chat-container" id="chatBox">
-                <div class="message-row">
-                    <div class="avatar-canvas-box" id="chat-canvas-container"></div>
-                    <div class="message-bubble">
-                        <strong>${userConfig.name}:</strong> Pronto! Connesso al modello (${userConfig.model}).
-                    </div>
-                </div>
-            </div>
-            <div class="ad-banner">📢 <strong>AvatarBox Hub</strong> — Modalità: ${userConfig.provider.toUpperCase()}</div>
-            <div class="input-interaction">
-                <button class="mic-btn" id="micBtn" onclick="toggleMicrofono()" title="Dettatura Vocale">🎤</button>
-                <textarea id="rispostaUtente" placeholder="Scrivi a ${userConfig.name}..."></textarea>
-                <button id="sendBtn" onclick="inviaMessaggioCloud()">Invia</button>
-                <button id="stopBtn" class="stop-btn" onclick="interrompiGenerazione()">Interrompi</button>
-            </div>
-        `;
-
-        document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>AvatarBox Attivo`;
-        initAvatarRenderer('chat-canvas-container');
-
-        if(!isRestore || chatHistory.length === 0) {
-            const systemPrompts = {
-                it: `Ti chiami ${userConfig.name}. Sei un assistente virtuale 3D brillante, amichevole e conciso. Rispondi sempre in italiano.`,
-                en: `Your name is ${userConfig.name}. You are a bright, friendly, and concise 3D virtual assistant. Always respond in English.`,
-                es: `Te llamas ${userConfig.name}. Eres un asistente virtual 3D brillante, amigable y conciso. Responde siempre en español.`,
-                fr: `Vous vous appelez ${userConfig.name}. Vous êtes un assistant virtuel 3D brillant, amical et concis. Répondez toujours en français.`,
-                de: `Du heißt ${userConfig.name}. Du bist ein intelligenter, freundlicher 3D-Assistent. Antworte immer auf Deutsch.`
-            };
-            chatHistory.push({
-                role: "system",
-                content: systemPrompts[userConfig.lang] || systemPrompts['it']
-            });
-        }
-
-        if(isRestore) {
-            const chatBox = document.getElementById('chatBox');
-            chatHistory.forEach(msg => {
-                if(msg.role === 'user') {
-                    chatBox.innerHTML += `<div class="message-row"><div class="message-bubble user"><strong>Tu:</strong> ${msg.content}</div></div>`;
-                } else if(msg.role === 'assistant') {
-                    chatBox.innerHTML += `
-                        <div class="message-row">
-                            <div class="avatar-canvas-box"></div>
-                            <div class="message-bubble">
-                                <strong>${userConfig.name}:</strong> ${msg.content}<br>
-                                <button class="tts-action-btn" onclick="faiParlareIA('${msg.content.replace(/'/g, "\\'")}')">🔊 Ascolta</button>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-        }
-
-        document.getElementById('rispostaUtente').addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                inviaMessaggioCloud();
-            }
-        });
-
-        salvaChatCorrente();
-    };
-
-    window.faiParlareIA = function(testo) {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(testo.replace(/[*#_~`]/g, ''));
-        const voiceSelect = document.getElementById('voiceSelect');
-        const selectedOption = voiceSelect?.options[voiceSelect.selectedIndex];
-        
-        if (selectedOption) {
-            const voiceName = selectedOption.value;
-            utterance.pitch = parseFloat(selectedOption.dataset.pitch || "1.0");
-            const voices = window.speechSynthesis.getVoices();
-            const v = voices.find(voice => voice.name === voiceName);
-            if(v) utterance.voice = v;
-        }
-        
-        staParlando = true;
-        utterance.onend = () => { staParlando = false; };
-        window.speechSynthesis.speak(utterance);
-    };
-
-    let recognition = null;
-    window.toggleMicrofono = function() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("Riconoscimento vocale non supportato da questo browser.");
-            return;
-        }
-
-        const micBtn = document.getElementById('micBtn');
-        const input = document.getElementById('rispostaUtente');
-
-        if (recognition) {
-            recognition.stop();
-            recognition = null;
-            micBtn.classList.remove('listening');
-            return;
-        }
-
-        recognition = new SpeechRecognition();
-        recognition.lang = userConfig.lang === 'it' ? 'it-IT' : 'en-US';
-        recognition.onstart = () => { micBtn.classList.add('listening'); };
-        recognition.onresult = (event) => { input.value = event.results[0][0].transcript; };
-        recognition.onerror = () => { micBtn.classList.remove('listening'); recognition = null; };
-        recognition.onend = () => { micBtn.classList.remove('listening'); recognition = null; };
-        recognition.start();
-    };
-
-    let controllerAbilitato = null;
-    window.interrompiGenerazione = function() {
-        if(controllerAbilitato) controllerAbilitato.abort();
-        stopGenerazioneFlag = true;
-    };
-
-    window.inviaMessaggioCloud = async function() {
-        const input = document.getElementById('rispostaUtente');
-        const testo = input.value.trim();
-        if (!testo) return;
-
-        input.value = "";
-        const chatBox = document.getElementById('chatBox');
-        
-        chatBox.innerHTML += `<div class="message-row"><div class="message-bubble user"><strong>Tu:</strong> ${testo}</div></div>`;
-        chatHistory.push({ role: "user", content: testo });
-
-        const aiBubbleId = "ai-reply-" + Date.now();
-        chatBox.innerHTML += `
-            <div class="message-row">
-                <div class="avatar-canvas-box"></div>
-                <div class="message-bubble" id="${aiBubbleId}"><em>Elaborazione in corso...</em></div>
-            </div>
-        `;
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        const sendBtn = document.getElementById('sendBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        if(sendBtn) sendBtn.style.display = 'none';
-        if(stopBtn) stopBtn.style.display = 'inline-block';
-
-        stopGenerazioneFlag = false;
-        controllerAbilitato = new AbortController();
-
-        let endpoint = "https://openrouter.ai/api/v1/chat/completions";
-        let headers = {
-            "Content-Type": "application/json"
-        };
-
-        if(userConfig.provider === 'free') {
-            endpoint = "https://openrouter.ai/api/v1/chat/completions";
-            headers["Authorization"] = userConfig.apiKey ? `Bearer ${userConfig.apiKey}` : "Bearer sk-or-v1-public-free-access";
-            headers["HTTP-Referer"] = "https://github.com/lanzettanicola-glitch/avatarbox";
-            headers["X-Title"] = "AvatarBox";
-        } else {
-            headers["Authorization"] = `Bearer ${userConfig.apiKey}`;
-            if(userConfig.provider === 'groq') endpoint = "https://api.groq.com/openai/v1/chat/completions";
-            else if(userConfig.provider === 'openai') endpoint = "https://api.openai.com/v1/chat/completions";
-            else if(userConfig.provider === 'openrouter') endpoint = "https://openrouter.ai/api/v1/chat/completions";
-            else if(userConfig.provider === 'gemini') endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-        }
-
-        try {
-            const response = await fetch(endpoint, {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify({
-                    model: userConfig.model,
-                    messages: chatHistory,
-                    stream: true
-                }),
-                signal: controllerAbilitato.signal
-            });
-
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errText || response.statusText}`);
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            let fullReply = "";
-
-            while (true) {
-                if (stopGenerazioneFlag) break;
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                const chunkText = decoder.decode(value, { stream: true });
-                const lines = chunkText.split("\n");
-
-                for (let line of lines) {
-                    line = line.trim();
-                    if (line.startsWith("data: ")) {
-                        const dataStr = line.substring(6);
-                        if (dataStr === "[DONE]") continue;
-                        try {
-                            const json = JSON.parse(dataStr);
-                            const delta = json.choices[0]?.delta?.content || "";
-                            fullReply += delta;
-                            const bubble = document.getElementById(aiBubbleId);
-                            if(bubble) bubble.innerHTML = `<strong>${userConfig.name}:</strong> ${fullReply}`;
-                            chatBox.scrollTop = chatBox.scrollHeight;
-                        } catch(e) {}
-                    }
-                }
-            }
-
-            if(!fullReply) fullReply = "(Generazione interrotta)";
-            chatHistory.push({ role: "assistant", content: fullReply });
-            
-            const bubble = document.getElementById(aiBubbleId);
-            if(bubble) {
-                bubble.innerHTML = `
-                    <strong>${userConfig.name}:</strong> ${fullReply}<br>
-                    <button class="tts-action-btn" onclick="faiParlareIA('${fullReply.replace(/'/g, "\\'")}')">🔊 Ascolta</button>
-                `;
-            }
-
-            if (!stopGenerazioneFlag) {
-                faiParlareIA(fullReply);
-            }
-            salvaChatCorrente();
-        } catch(e) {
-            if(e.name !== 'AbortError') {
-                const bubble = document.getElementById(aiBubbleId);
-                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore API: ${e.message}</span>`;
-            }
-        } finally {
-            if(sendBtn) sendBtn.style.display = 'inline-block';
-            if(stopBtn) stopBtn.style.display = 'none';
-            staParlando = false;
-        }
-    };
-
-    window.onload = () => {
-        if(savedConfig) {
-            const avInput = document.getElementById('avatarNameInput');
-            if(avInput) avInput.value = userConfig.name;
-            const langSel = document.getElementById('langSelect');
-            if(langSel) langSel.value = userConfig.lang;
-            const provSel = document.getElementById('providerSelect');
-            if(provSel) provSel.value = userConfig.provider;
-            aggiornaModelliDisponibili();
-            const modSel = document.getElementById('modelSelect');
-            if(modSel) modSel.value = userConfig.model;
-            const apiInp = document.getElementById('apiKeyInput');
-            if(apiInp) apiInp.value = userConfig.apiKey;
-            
-            const skinInp = document.getElementById('skinColorInput');
-            if(skinInp) skinInp.value = userConfig.skin;
-            const hairInp = document.getElementById('hairColorInput');
-            if(hairInp) hairInp.value = userConfig.hair;
-            const eyeInp = document.getElementById('eyeColorInput');
-            if(eyeInp) eyeInp.value = userConfig.eyes;
-            const lipInp = document.getElementById('lipColorInput');
-            if(lipInp) lipInp.value = userConfig.lips;
-
-            const g1 = document.getElementById('gadgetGlasses');
-            if(g1) g1.checked = userConfig.gadgets.glasses;
-            const g2 = document.getElementById('gadgetVisor');
-            if(g2) g2.checked = userConfig.gadgets.visor;
-            const g3 = document.getElementById('gadgetHeadphones');
-            if(g3) g3.checked = userConfig.gadgets.headphones;
-            const g4 = document.getElementById('gadgetCap');
-            if(g4) g4.checked = userConfig.gadgets.cap;
-        } else {
-            aggiornaModelliDisponibili();
-        }
-        initAvatarRenderer('preview-canvas-container');
-        caricaStoricoSidebar();
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.onvoiceschanged = () => { aggiornaVociTTS(); };
-            aggiornaVociTTS();
-        }
-    };
+  } finally {
+    abortCtl = null;
+    if ($('sendBtn')) { $('sendBtn').style.display = 'inline-block'; $('stopBtn').style.display = 'none'; }
+  }
+}
+
+/* ---------- Avvio ---------- */
+$('settingsBtn').onclick = () => renderSetup(true);
+$('newChatBtn').onclick = () => { currentChatId = null; chatHistory = []; renderSetup(false); };
+$('clearBtn').onclick = () => { if (confirm("Vuoi cancellare tutte le chat salvate in locale?")) { localStorage.removeItem(CHATS_KEY); renderSidebar(); } };
+window.onload = () => {
+  renderSetup(false); renderSidebar();
+  if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = fillVoices;
+};
 </script>
-
 </body>
 </html>
