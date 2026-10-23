@@ -1,34 +1,9 @@
-L'errore è chiarissimo e ci spiega esattamente cosa non va: Google AI Studio rifiuta la stringa del modello (`gemini-1.5-pro` o simili) perché richiede nomi di modelli specifici compatibili con il suo livello di API.
-
-Nel codice precedente la lista dei modelli di Gemini conteneva voci obsolete o non mappate correttamente sull'endpoint OpenAI-compatibile di Google.
-
-### Come risolvere subito nel codice:
-
-Nel blocco JavaScript, cerca la funzione `aggiornaModelliDisponibili()` e sostituisci la sezione dedicata a `gemini` con i nomi corretti supportati da Google (`gemini-2.5-flash` o `gemini-1.5-flash`).
-
-Ecco la porzione esatta da aggiornare dentro il tuo `<script>`:
-
-```javascript
-        } else if(provider === 'gemini') {
-            opzioni = [
-                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash"},
-                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash"}
-            ];
-        }
-
-```
-
-### Codice Completo Aggiornato
-
-Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il **Commit changes**:
-
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AvatarBox — Il tuo Avatar 3D & IA Cloud</title>
+    <title>AvatarBox — Universal AI Platform & 3D Avatar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -259,7 +234,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
 
 <div id="game-container">
     <header>
-        <div class="brand-title">Avatar<span>Box</span> <span style="font-size:10px; background:rgba(16,185,129,0.2); padding:2px 6px; border-radius:4px;">Cloud API</span></div>
+        <div class="brand-title">Avatar<span>Box</span> <span style="font-size:10px; background:rgba(16,185,129,0.2); padding:2px 6px; border-radius:4px;">Universal AI Hub</span></div>
         <div class="header-actions">
             <button class="icon-btn" onclick="apriImpostazioni()" id="settingsBtn" style="display:none;">⚙️ Impostazioni</button>
             <div id="header-status" style="color: var(--text-sub); font-size: 11px;"><span class="status-dot"></span>Pronto</div>
@@ -278,8 +253,8 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
             <div id="main-content" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
                 <div class="setup-screen" id="setupScreen">
                     <div>
-                        <h1>Crea il tuo Avatar 3D (Cloud API)</h1>
-                        <p>Inserisci la tua API Key, personalizza l'avatar e collega qualsiasi modello cloud in un attimo.</p>
+                        <h1>Scegli la tua Intelligenza Artificiale</h1>
+                        <p>Usa i modelli liberi inclusi senza API Key o inserisci la tua chiave per sbloccare qualsiasi provider.</p>
                     </div>
                     
                     <div class="config-grid">
@@ -308,12 +283,13 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                         </div>
 
                         <div class="input-group">
-                            <label>Fornitore API IA</label>
+                            <label>Piattaforma / Fornitore IA</label>
                             <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
-                                <option value="groq">Groq (Consigliato / Ultraveloce)</option>
-                                <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
-                                <option value="openrouter">OpenRouter (Tutti i modelli)</option>
-                                <option value="gemini">Google Gemini</option>
+                                <option value="free">Modelli Liberi (Nessuna API Key necessaria)</option>
+                                <option value="groq">Groq (Ultra Veloce - Richiede Key)</option>
+                                <option value="openrouter">OpenRouter (Tutti i modelli - Richiede Key)</option>
+                                <option value="openai">OpenAI (GPT-4o - Richiede Key)</option>
+                                <option value="gemini">Google Gemini (Richiede Key)</option>
                             </select>
                         </div>
 
@@ -322,9 +298,9 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                             <select id="modelSelect"></select>
                         </div>
 
-                        <div class="input-group full-width">
-                            <label id="apiKeyLabel">Inserisci API Key</label>
-                            <input type="password" id="apiKeyInput" placeholder="gsk_... o AIza..." oninput="salvaconfigInTempoReale()">
+                        <div class="input-group full-width" id="apiKeyGroup">
+                            <label id="apiKeyLabel">API Key Personale (Opzionale se usi i Modelli Liberi)</label>
+                            <input type="password" id="apiKeyInput" placeholder="Lascia vuoto per usare i modelli liberi o inserisci chiave..." oninput="salvaconfigInTempoReale()">
                         </div>
 
                         <div class="input-group">
@@ -364,7 +340,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                     </div>
 
                     <div style="margin-top: 6px; padding-bottom: 20px;">
-                        <button onclick="avviaAvatarBoxCloud()" style="width: 100%; height: 48px;">Conferma & Avvia AvatarBox</button>
+                        <button onclick="avviaAvatarBoxCloud()" style="width: 100%; height: 48px;">Avvia AvatarBox Hub</button>
                     </div>
                 </div>
             </div>
@@ -376,8 +352,8 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
     let userConfig = {
         name: "Nexus",
         lang: "it",
-        provider: "groq",
-        model: "llama-3.1-8b-instant",
+        provider: "free",
+        model: "openrouter/free",
         apiKey: "",
         skin: "#e0a96d",
         hair: "#2d3748",
@@ -399,7 +375,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
     let isAppRunning = false;
     let stopGenerazioneFlag = false;
 
-    const savedConfig = localStorage.getItem('avatarbox_cloud_config');
+    const savedConfig = localStorage.getItem('avatarbox_universal_config');
     if(savedConfig) {
         try {
             userConfig = JSON.parse(savedConfig);
@@ -544,27 +520,34 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
         modelSelect.innerHTML = "";
 
         let opzioni = [];
-        if(provider === 'groq') {
+        if(provider === 'free') {
             opzioni = [
-                {val: "llama-3.1-8b-instant", label: "Llama 3.1 8B (Groq Veloce)"},
+                {val: "openrouter/free", label: "🌟 OpenRouter Free Pool (Consigliato / Sempre Libero)"},
+                {val: "deepseek/deepseek-chat:free", label: "DeepSeek V3 Free (OpenRouter)"},
+                {val: "meta-llama/llama-3.1-8b-instruct:free", label: "Llama 3.1 8B Free (OpenRouter)"},
+                {val: "google/gemma-2-9b-it:free", label: "Gemma 2 9B Free (Google)"}
+            ];
+        } else if(provider === 'groq') {
+            opzioni = [
+                {val: "llama-3.1-8b-instant", label: "Llama 3.1 8B (Groq Ultra Veloce)"},
                 {val: "llama-3.3-70b-versatile", label: "Llama 3.3 70B (Groq Avanzato)"},
                 {val: "mixtral-8x7b-32768", label: "Mixtral 8x7B (Groq)"}
             ];
         } else if(provider === 'openai') {
             opzioni = [
-                {val: "gpt-4o-mini", label: "GPT-4o Mini (Consigliato)"},
-                {val: "gpt-4o", label: "GPT-4o (Avanzato)"}
+                {val: "gpt-4o-mini", label: "GPT-4o Mini (OpenAI)"},
+                {val: "gpt-4o", label: "GPT-4o (OpenAI Avanzato)"}
             ];
         } else if(provider === 'openrouter') {
             opzioni = [
-                {val: "deepseek/deepseek-chat", label: "DeepSeek V3 (OpenRouter)"},
-                {val: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet (OpenRouter)"},
-                {val: "meta-llama/llama-3.1-8b-instruct", label: "Llama 3.1 8B (OpenRouter)"}
+                {val: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet (Anthropic)"},
+                {val: "deepseek/deepseek-chat", label: "DeepSeek V3 (Standard)"},
+                {val: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B"}
             ];
         } else if(provider === 'gemini') {
             opzioni = [
-                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash"},
-                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash"}
+                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Google)"},
+                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash (Google)"}
             ];
         }
 
@@ -601,7 +584,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
 
     window.salvaconfigInTempoReale = function() {
         userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || "";
-        localStorage.setItem('avatarbox_cloud_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
     };
 
     window.aggiornaVociTTS = function() {
@@ -655,7 +638,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
     function caricaStoricoSidebar() {
         const historyList = document.getElementById('historyList');
         if(!historyList) return;
-        const saved = localStorage.getItem('avatarbox_cloud_chats');
+        const saved = localStorage.getItem('avatarbox_universal_chats');
         chatsSaved = saved ? JSON.parse(saved) : [];
 
         historyList.innerHTML = "";
@@ -681,7 +664,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
 
     window.cancellaCronologia = function() {
         if(confirm("Vuoi cancellare tutte le chat salvate in locale?")) {
-            localStorage.removeItem('avatarbox_cloud_chats');
+            localStorage.removeItem('avatarbox_universal_chats');
             caricaStoricoSidebar();
         }
     };
@@ -695,7 +678,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
             messages: chatHistory
         };
 
-        let saved = localStorage.getItem('avatarbox_cloud_chats');
+        let saved = localStorage.getItem('avatarbox_universal_chats');
         let list = saved ? JSON.parse(saved) : [];
         
         const index = list.findIndex(c => c.id === currentChatId);
@@ -705,12 +688,12 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
             list.unshift(chatData);
         }
 
-        localStorage.setItem('avatarbox_cloud_chats', JSON.stringify(list));
+        localStorage.setItem('avatarbox_universal_chats', JSON.stringify(list));
         caricaStoricoSidebar();
     }
 
     function ripristinaChat(id) {
-        const saved = localStorage.getItem('avatarbox_cloud_chats');
+        const saved = localStorage.getItem('avatarbox_universal_chats');
         if(!saved) return;
         const list = JSON.parse(saved);
         const chat = list.find(c => c.id === id);
@@ -731,8 +714,8 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
         mainContent.innerHTML = `
             <div class="setup-screen" id="setupScreen">
                 <div>
-                    <h1>Impostazioni & Personalizzazione</h1>
-                    <p>Modifica chiavi API, modello o aspetto dell'avatar.</p>
+                    <h1>Impostazioni & Selezione IA</h1>
+                    <p>Modifica fornitore, modelli liberi o aspetto dell'avatar.</p>
                 </div>
                 
                 <div class="config-grid">
@@ -761,11 +744,12 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                     </div>
 
                     <div class="input-group">
-                        <label>Fornitore API IA</label>
+                        <label>Piattaforma / Fornitore IA</label>
                         <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
+                            <option value="free" ${userConfig.provider==='free'?'selected':''}>Modelli Liberi (Senza API Key)</option>
                             <option value="groq" ${userConfig.provider==='groq'?'selected':''}>Groq</option>
-                            <option value="openai" ${userConfig.provider==='openai'?'selected':''}>OpenAI</option>
                             <option value="openrouter" ${userConfig.provider==='openrouter'?'selected':''}>OpenRouter</option>
+                            <option value="openai" ${userConfig.provider==='openai'?'selected':''}>OpenAI</option>
                             <option value="gemini" ${userConfig.provider==='gemini'?'selected':''}>Google Gemini</option>
                         </select>
                     </div>
@@ -776,7 +760,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                     </div>
 
                     <div class="input-group full-width">
-                        <label>API Key</label>
+                        <label>API Key (Opzionale per modelli liberi)</label>
                         <input type="password" id="apiKeyInput" value="${userConfig.apiKey}" oninput="salvaconfigInTempoReale()">
                     </div>
 
@@ -844,7 +828,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
             cap: document.getElementById('gadgetCap').checked
         };
 
-        localStorage.setItem('avatarbox_cloud_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
         avviaAvatarBoxCloud(true);
     };
 
@@ -855,12 +839,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
         userConfig.model = document.getElementById('modelSelect')?.value || userConfig.model;
         userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || userConfig.apiKey;
 
-        if(!userConfig.apiKey) {
-            alert("Inserisci un'API Key valida per continuare!");
-            return;
-        }
-
-        localStorage.setItem('avatarbox_cloud_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_universal_config', JSON.stringify(userConfig));
         isAppRunning = true;
         document.getElementById('settingsBtn').style.display = 'inline-block';
 
@@ -870,11 +849,11 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
                 <div class="message-row">
                     <div class="avatar-canvas-box" id="chat-canvas-container"></div>
                     <div class="message-bubble">
-                        <strong>${userConfig.name}:</strong> Connessione Cloud stabilita con successo! Pronte le risposte via API.
+                        <strong>${userConfig.name}:</strong> Pronto! Connesso al modello (${userConfig.model}).
                     </div>
                 </div>
             </div>
-            <div class="ad-banner">📢 <strong>AvatarBox Cloud</strong> — Connesso a ${userConfig.provider.toUpperCase()}</div>
+            <div class="ad-banner">📢 <strong>AvatarBox Hub</strong> — Modalità: ${userConfig.provider.toUpperCase()}</div>
             <div class="input-interaction">
                 <button class="mic-btn" id="micBtn" onclick="toggleMicrofono()" title="Dettatura Vocale">🎤</button>
                 <textarea id="rispostaUtente" placeholder="Scrivi a ${userConfig.name}..."></textarea>
@@ -883,7 +862,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
             </div>
         `;
 
-        document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>AvatarBox Cloud Attivo`;
+        document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>AvatarBox Attivo`;
         initAvatarRenderer('chat-canvas-container');
 
         if(!isRestore || chatHistory.length === 0) {
@@ -998,7 +977,7 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
         chatBox.innerHTML += `
             <div class="message-row">
                 <div class="avatar-canvas-box"></div>
-                <div class="message-bubble" id="${aiBubbleId}"><em>Elaborazione Cloud in corso...</em></div>
+                <div class="message-bubble" id="${aiBubbleId}"><em>Elaborazione in corso...</em></div>
             </div>
         `;
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -1011,18 +990,22 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
         stopGenerazioneFlag = false;
         controllerAbilitato = new AbortController();
 
-        let endpoint = "https://api.groq.com/openai/v1/chat/completions";
+        let endpoint = "https://openrouter.ai/api/v1/chat/completions";
         let headers = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${userConfig.apiKey}`
+            "Content-Type": "application/json"
         };
 
-        if(userConfig.provider === 'openai') {
-            endpoint = "https://api.openai.com/v1/chat/completions";
-        } else if(userConfig.provider === 'openrouter') {
+        if(userConfig.provider === 'free') {
             endpoint = "https://openrouter.ai/api/v1/chat/completions";
-        } else if(userConfig.provider === 'gemini') {
-            endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+            headers["Authorization"] = userConfig.apiKey ? `Bearer ${userConfig.apiKey}` : "Bearer sk-or-v1-public-free-access";
+            headers["HTTP-Referer"] = "https://github.com/lanzettanicola-glitch/avatarbox";
+            headers["X-Title"] = "AvatarBox";
+        } else {
+            headers["Authorization"] = `Bearer ${userConfig.apiKey}`;
+            if(userConfig.provider === 'groq') endpoint = "https://api.groq.com/openai/v1/chat/completions";
+            else if(userConfig.provider === 'openai') endpoint = "https://api.openai.com/v1/chat/completions";
+            else if(userConfig.provider === 'openrouter') endpoint = "https://openrouter.ai/api/v1/chat/completions";
+            else if(userConfig.provider === 'gemini') endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
         }
 
         try {
@@ -1143,5 +1126,3 @@ Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il *
 
 </body>
 </html>
-
-```
