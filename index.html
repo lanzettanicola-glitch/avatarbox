@@ -529,7 +529,7 @@
 
                         <div class="input-group full-width">
                             <label id="apiKeyLabel">Inserisci API Key</label>
-                            <input type="password" id="apiKeyInput" placeholder="gsk_... o sk-..." oninput="salvaconfigInTempoReale()">
+                            <input type="password" id="apiKeyInput" placeholder="gsk_... o AIza..." oninput="salvaconfigInTempoReale()">
                         </div>
 
                         <div class="input-group">
@@ -1243,7 +1243,8 @@
             });
 
             if (!response.ok) {
-                throw new Error(`Errore API HTTP: ${response.status}`);
+                const errText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errText || response.statusText}`);
             }
 
             const reader = response.body.getReader();
@@ -1293,7 +1294,7 @@
         } catch(e) {
             if(e.name !== 'AbortError') {
                 const bubble = document.getElementById(aiBubbleId);
-                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore di connessione o API Key non valida: ${e.message}</span>`;
+                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore API / Chiave non valida: ${e.message}</span>`;
             }
         } finally {
             if(sendBtn) sendBtn.style.display = 'inline-block';
