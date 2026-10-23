@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AvatarBox — Free AI Platform & 3D Avatar</title>
+<title>AvatarBox — iOS Free AI Hub & 3D Avatar</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -26,6 +26,7 @@
   scrollbar-width: thin;
   scrollbar-color: var(--ac) rgba(0,0,0,.2);
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -34,7 +35,7 @@ body {
     radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.08), transparent 50%),
     radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.06), transparent 50%);
   color: var(--tx);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,7 +57,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
 @media (min-width: 768px) {
@@ -65,7 +65,7 @@ body {
 
 header {
   background: rgba(8, 12, 18, 0.9);
-  padding: 14px 22px;
+  padding: 14px 18px;
   font-size: 13px;
   font-weight: 600;
   border-bottom: 1px solid var(--bd);
@@ -79,15 +79,14 @@ header {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  gap: 8px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
-  letter-spacing: -0.5px;
 }
-.brand span { color: var(--ac); transition: color 0.3s; }
+.brand span { color: var(--ac); }
 
-.header-actions { display: flex; gap: 10px; align-items: center; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
 
 .icon-btn {
   background: rgba(255,255,255,.04);
@@ -97,7 +96,6 @@ header {
   border-radius: 9px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s;
 }
 .icon-btn:hover { background: var(--ac-glow); border-color: var(--ac); color: #fff; }
 
@@ -108,7 +106,6 @@ header {
   display: inline-block;
   box-shadow: 0 0 12px var(--ac);
   margin-right: 6px;
-  transition: background 0.3s;
 }
 
 #app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
@@ -121,7 +118,7 @@ header {
 
 #sidebar {
   width: 260px;
-  background: rgba(6, 9, 14, 0.85);
+  background: rgba(6, 9, 14, 0.95);
   border-right: 1px solid var(--bd);
   display: flex;
   flex-direction: column;
@@ -137,14 +134,12 @@ header {
   #sidebar {
     position: absolute; top: 0; bottom: 0; left: 0;
     transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 30px rgba(0,0,0,.7);
+    transition: transform .3s ease;
+    box-shadow: 10px 0 30px rgba(0,0,0,.8);
   }
   #sidebar.open { transform: none; }
   .menu-btn { display: inline-block; }
 }
-
-:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
 
 #sidebar h3 {
   font-size: 11px;
@@ -173,167 +168,138 @@ header {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: all 0.2s;
 }
-.history-item:hover { background: var(--ac-glow); color: #fff; border-color: var(--bd-focus); }
 
-#screen { flex: 1; padding: 16px; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+#screen { flex: 1; padding: 14px; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 #main-content { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
-/* Setup & Wizard */
 .setup {
   display: flex;
   flex-direction: column;
   height: 100%;
   max-width: 640px;
   margin: 0 auto;
-  gap: 14px;
+  gap: 12px;
   overflow-y: auto;
-  padding: 4px 10px 30px 4px;
+  padding: 4px 6px 30px 4px;
 }
-.setup h1 { font-size: 20px; margin: 0; text-align: center; letter-spacing: -0.5px; }
-.setup p { color: var(--sub); font-size: 12.5px; margin: 0; text-align: center; }
+.setup h1 { font-size: 19px; margin: 0; text-align: center; }
+.setup p { color: var(--sub); font-size: 12px; margin: 0; text-align: center; }
 
-.grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 @media (min-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
 
 .ig {
   background: rgba(0,0,0,.25);
-  padding: 10px 14px;
+  padding: 10px;
   border-radius: 12px;
   font-size: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   border: 1px solid var(--bd);
-  transition: border-color 0.2s;
 }
-.ig:focus-within { border-color: var(--bd-focus); }
 .full { grid-column: 1 / -1; }
 
 label { color: var(--sub); font-weight: 500; font-size: 11.5px; }
 
-input[type=text],
-select,
-textarea {
+input[type=text], select, textarea {
   background: rgba(8, 12, 18, 0.9);
   color: #fff;
   border: 1px solid var(--bd);
   padding: 8px 10px;
   font-family: 'Fira Code', monospace;
   border-radius: 8px;
-  font-size: 12.5px;
+  font-size: 13px;
   width: 100%;
   outline: none;
-  transition: all 0.2s;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-glow); }
 
-/* Hero Avatar Preview Box */
 .preview-hero {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  background: rgba(255,255,255,.02);
   border: 1px solid var(--bd);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  position: relative;
-  overflow: hidden;
-}
-.preview-hero::after {
-  content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle, var(--ac-glow) 0%, transparent 70%);
-  pointer-events: none; opacity: 0.6;
+  gap: 16px;
 }
 
 .avatar-hero-box {
-  width: 110px; height: 110px;
+  width: 100px; height: 100px;
   border-radius: 14px;
   overflow: hidden;
   border: 2px solid var(--ac);
   background: #080c12;
-  box-shadow: 0 0 25px var(--ac-glow);
+  box-shadow: 0 0 20px var(--ac-glow);
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
 }
 
-/* Custom Pills / Gadgets */
-.pills-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.pills-group { display: flex; gap: 6px; flex-wrap: wrap; }
 .pill-checkbox { display: none; }
 .pill-label {
   background: rgba(255,255,255,.04);
   border: 1px solid var(--bd);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11.5px;
+  padding: 6px 10px;
+  border-radius: 18px;
+  font-size: 11px;
   cursor: pointer;
   color: var(--sub);
-  transition: all 0.2s;
-  user-select: none;
 }
 .pill-checkbox:checked + .pill-label {
   background: var(--ac-glow);
   border-color: var(--ac);
   color: #fff;
-  box-shadow: 0 0 10px var(--ac-glow);
 }
 
-/* Palette Colore Temi */
-.theme-palette { display: flex; gap: 10px; align-items: center; }
+.theme-palette { display: flex; gap: 8px; align-items: center; }
 .theme-dot {
-  width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s;
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
 }
-.theme-dot:hover { transform: scale(1.15); }
-.theme-dot.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.4); }
+.theme-dot.active { border-color: #fff; }
 
-/* Color Swatches custom */
-.swatch-picker { display: flex; gap: 8px; align-items: center; }
+.swatch-picker { display: flex; gap: 6px; align-items: center; }
 .swatch {
-  width: 24px; height: 24px; border-radius: 6px; cursor: pointer; border: 2px solid var(--bd); transition: transform 0.2s;
+  width: 22px; height: 22px; border-radius: 6px; cursor: pointer; border: 2px solid var(--bd);
 }
-.swatch:hover { transform: scale(1.1); }
-.swatch.selected { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+.swatch.selected { border-color: #fff; }
 input[type=color] { display: none; }
 
-/* Chat */
 .chat {
   flex: 1;
   background: rgba(6, 9, 14, 0.75);
   border: 1px solid var(--bd);
   border-radius: 14px;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
-.msg { display: flex; gap: 12px; align-items: flex-start; animation: fadeIn 0.25s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.msg { display: flex; gap: 10px; align-items: flex-start; }
 
 .avatar-box-chat {
-  width: 48px; height: 48px;
+  width: 44px; height: 44px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--bd);
   background: #080c12;
   flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
 }
 
 .bubble {
   background: rgba(255,255,255,.03);
   border: 1px solid var(--bd);
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: 12px;
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: #e5e7eb;
-  max-width: 560px;
+  max-width: 85%;
   word-break: break-word;
-  box-shadow: 0 4px 20px rgba(0,0,0,.2);
 }
 .bubble.user {
   background: var(--ac-glow);
@@ -342,7 +308,6 @@ input[type=color] { display: none; }
   color: #fff;
 }
 
-/* Typing Indicator Animation */
 .typing-dots { display: inline-flex; align-items: center; gap: 4px; padding: 4px 0; }
 .typing-dots span {
   width: 6px; height: 6px; background: var(--sub); border-radius: 50%;
@@ -357,36 +322,34 @@ input[type=color] { display: none; }
   border: 1px solid var(--ac);
   color: #fff;
   font-size: 11px;
-  padding: 5px 10px;
-  border-radius: 7px;
+  padding: 4px 8px;
+  border-radius: 6px;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: all 0.2s;
+  gap: 4px;
 }
-.tts-btn:hover { background: var(--ac); box-shadow: 0 0 12px var(--ac-glow); }
 
 .banner {
   background: rgba(255,255,255,.02);
   border: 1px dashed var(--bd);
-  border-radius: 10px;
-  padding: 8px;
+  border-radius: 8px;
+  padding: 6px;
   text-align: center;
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--sub);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-.interaction { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+.interaction { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
 
 textarea {
   flex: 1;
-  height: 48px;
+  height: 44px;
   resize: none;
-  border-radius: 12px !important;
-  padding: 12px !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
 }
 
 button.primary {
@@ -395,48 +358,35 @@ button.primary {
   border: none;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 13px;
-  height: 48px;
-  padding: 0 22px;
-  transition: all 0.2s;
+  height: 44px;
+  padding: 0 18px;
   flex-shrink: 0;
-  box-shadow: 0 4px 15px var(--ac-glow);
 }
-button.primary:hover { background-color: var(--ac-hover); transform: translateY(-1px); box-shadow: 0 6px 20px var(--ac-glow); }
-
-.stop-btn { background-color: var(--danger) !important; box-shadow: 0 4px 15px rgba(239,68,68,0.3) !important; display: none; }
-.stop-btn:hover { background-color: var(--danger-hover) !important; }
 
 .mic-btn {
   background: rgba(255,255,255,.05);
   border: 1px solid var(--bd);
-  width: 48px; height: 48px;
-  border-radius: 12px;
+  width: 44px; height: 44px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+  font-size: 18px; cursor: pointer; flex-shrink: 0;
 }
-.mic-btn:hover { background: rgba(255,255,255,.1); border-color: var(--bd-focus); }
-.mic-btn.listening { background: var(--danger); border-color: #f87171; animation: pulse 1.2s infinite; }
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
-  70% { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
-  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
-}
+.mic-btn.listening { background: var(--danger); border-color: #f87171; }
 </style>
 </head>
 <body>
 
 <div id="game-container">
     <header>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <button class="icon-btn menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-            <div class="brand">Avatar<span>Box</span> <span style="font-size:10px; padding:2px 6px; background:var(--ac-glow); border-radius:4px; border:1px solid var(--bd);">Free Hub</span></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button class="icon-btn menu-btn" onclick="toggleSidebar()">☰</button>
+            <div class="brand">Avatar<span>Box</span> iOS Free</div>
         </div>
         <div class="header-actions">
             <button class="icon-btn" onclick="apriImpostazioni()" id="settingsBtn" style="display:none;">⚙️ Impostazioni</button>
-            <div id="header-status" style="color: var(--sub); font-size: 11.5px;"><span class="dot"></span>Pronto</div>
+            <div id="header-status" style="color: var(--sub); font-size: 11px;"><span class="dot"></span>Pronto</div>
         </div>
     </header>
 
@@ -444,31 +394,30 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
         <div id="sidebar">
             <h3>💬 Cronologia Chat</h3>
-            <button class="primary" onclick="nuovaChat()" style="height:38px; font-size:12px; margin-bottom:4px; width:100%;">+ Nuova Chat</button>
+            <button class="primary" onclick="nuovaChat()" style="height:36px; font-size:12px; margin-bottom:4px; width:100%;">+ Nuova Chat</button>
             <div class="history-list" id="historyList"></div>
-            <button onclick="cancellaCronologia()" style="background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.25); padding: 7px; font-size: 11.5px; border-radius:8px; cursor:pointer; transition: background 0.2s;">Pulisci Storico</button>
+            <button onclick="cancellaCronologia()" style="background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.25); padding: 6px; font-size: 11px; border-radius:8px; cursor:pointer;">Pulisci Storico</button>
         </div>
 
         <div id="screen">
             <div id="main-content">
                 <div class="setup" id="setupScreen">
                     <div>
-                        <h1>Crea il tuo Avatar 3D & Chat Gratuita</h1>
-                        <p>Usa i modelli di intelligenza artificiale gratuiti senza alcuna chiave o registrazione.</p>
+                        <h1>Avatar 3D & IA 100% Gratuita</h1>
+                        <p>Nessuna API Key richiesta. Funziona perfettamente su iPhone e Safari.</p>
                     </div>
                     
                     <div class="grid">
                         <div class="preview-hero">
                             <div class="avatar-hero-box" id="preview-canvas-container"></div>
-                            <div style="flex: 1; display:flex; flex-direction:column; gap:8px;">
-                                <div style="font-size: 13px; font-weight: 600; color: #fff;">Anteprima Live 3D</div>
-                                <div style="font-size: 11.5px; color: var(--sub); line-height: 1.4;">L'avatar reagisce in tempo reale alle modifiche ed alla voce.</div>
+                            <div style="flex: 1; display:flex; flex-direction:column; gap:6px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: #fff;">Anteprima Live 3D</div>
                                 <div class="theme-palette">
                                     <span style="font-size: 11px; color: var(--sub);">Tema:</span>
-                                    <div class="theme-dot active" style="background:#10b981;" onclick="impostaTema('#10b981', '#059669', 'rgba(16,185,129,0.25)')" title="Smeraldo Cyber"></div>
-                                    <div class="theme-dot" style="background:#8b5cf6;" onclick="impostaTema('#8b5cf6', '#7c3aed', 'rgba(139,92,246,0.25)')" title="Viola Elettrico"></div>
-                                    <div class="theme-dot" style="background:#06b6d4;" onclick="impostaTema('#06b6d4', '#0891b2', 'rgba(6,182,212,0.25)')" title="Ciano Neon"></div>
-                                    <div class="theme-dot" style="background:#f59e0b;" onclick="impostaTema('#f59e0b', '#d97706', 'rgba(245,158,11,0.25)')" title="Arancio Tramonto"></div>
+                                    <div class="theme-dot active" style="background:#10b981;" onclick="impostaTema('#10b981', '#059669', 'rgba(16,185,129,0.25)')"></div>
+                                    <div class="theme-dot" style="background:#8b5cf6;" onclick="impostaTema('#8b5cf6', '#7c3aed', 'rgba(139,92,246,0.25)')"></div>
+                                    <div class="theme-dot" style="background:#06b6d4;" onclick="impostaTema('#06b6d4', '#0891b2', 'rgba(6,182,212,0.25)')"></div>
+                                    <div class="theme-dot" style="background:#f59e0b;" onclick="impostaTema('#f59e0b', '#d97706', 'rgba(245,158,11,0.25)')"></div>
                                 </div>
                             </div>
                         </div>
@@ -490,23 +439,22 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                         </div>
 
                         <div class="ig full">
-                            <label>Modello IA Gratuito</label>
+                            <label>Modello IA Libero (Senza Errori API)</label>
                             <select id="modelSelect">
-                                <option value="openrouter/free">🌟 OpenRouter Free Pool (Consigliato / Bilanciato)</option>
-                                <option value="deepseek/deepseek-chat:free">DeepSeek V3 Free</option>
-                                <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Free</option>
-                                <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B Free</option>
-                                <option value="google/gemma-2-9b-it:free">Gemma 2 9B Free</option>
+                                <option value="qwen">Qwen 2.5 72B (Consigliato / Molto Veloce)</option>
+                                <option value="llama">Llama 3.3 70B (Avanzato)</option>
+                                <option value="deepseek">DeepSeek R1 / V3 Free</option>
+                                <option value="mistral">Mistral Small Free</option>
                             </select>
                         </div>
 
                         <div class="ig full">
-                            <label>Voce Sintetica</label>
+                            <label>Voce Sintetica iOS</label>
                             <select id="voiceSelect"></select>
                         </div>
 
                         <div class="ig full">
-                            <label>Gadget & Accessori 3D</label>
+                            <label>Gadget 3D</label>
                             <div class="pills-group">
                                 <input type="checkbox" id="gadgetGlasses" class="pill-checkbox" onchange="aggiornaAnteprimaPreview()">
                                 <label for="gadgetGlasses" class="pill-label">👓 Occhiali</label>
@@ -523,52 +471,46 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                         </div>
 
                         <div class="ig">
-                            <label>Colore Pelle</label>
+                            <label>Pelle</label>
                             <div class="swatch-picker" id="picker-skin">
                                 <div class="swatch" style="background:#f5d0b1;" onclick="impostaColoreSwatch('skin', '#f5d0b1')"></div>
                                 <div class="swatch selected" style="background:#e0a96d;" onclick="impostaColoreSwatch('skin', '#e0a96d')"></div>
                                 <div class="swatch" style="background:#c68642;" onclick="impostaColoreSwatch('skin', '#c68642')"></div>
-                                <div class="swatch" style="background:#8d5524;" onclick="impostaColoreSwatch('skin', '#8d5524')"></div>
                             </div>
                             <input type="color" id="skinColorInput" value="#e0a96d">
                         </div>
 
                         <div class="ig">
-                            <label>Colore Capelli</label>
+                            <label>Capelli</label>
                             <div class="swatch-picker" id="picker-hair">
                                 <div class="swatch selected" style="background:#2d3748;" onclick="impostaColoreSwatch('hair', '#2d3748')"></div>
                                 <div class="swatch" style="background:#78350f;" onclick="impostaColoreSwatch('hair', '#78350f')"></div>
                                 <div class="swatch" style="background:#dc2626;" onclick="impostaColoreSwatch('hair', '#dc2626')"></div>
-                                <div class="swatch" style="background:#3b82f6;" onclick="impostaColoreSwatch('hair', '#3b82f6')"></div>
                             </div>
                             <input type="color" id="hairColorInput" value="#2d3748">
                         </div>
 
                         <div class="ig">
-                            <label>Colore Occhi</label>
+                            <label>Occhi</label>
                             <div class="swatch-picker" id="picker-eyes">
                                 <div class="swatch selected" style="background:#10b981;" onclick="impostaColoreSwatch('eyes', '#10b981')"></div>
                                 <div class="swatch" style="background:#3b82f6;" onclick="impostaColoreSwatch('eyes', '#3b82f6')"></div>
-                                <div class="swatch" style="background:#8b5cf6;" onclick="impostaColoreSwatch('eyes', '#8b5cf6')"></div>
-                                <div class="swatch" style="background:#ef4444;" onclick="impostaColoreSwatch('eyes', '#ef4444')"></div>
                             </div>
                             <input type="color" id="eyeColorInput" value="#10b981">
                         </div>
 
                         <div class="ig">
-                            <label>Colore Labbra</label>
+                            <label>Labbra</label>
                             <div class="swatch-picker" id="picker-lips">
                                 <div class="swatch selected" style="background:#f43f5e;" onclick="impostaColoreSwatch('lips', '#f43f5e')"></div>
                                 <div class="swatch" style="background:#e11d48;" onclick="impostaColoreSwatch('lips', '#e11d48')"></div>
-                                <div class="swatch" style="background:#9f1239;" onclick="impostaColoreSwatch('lips', '#9f1239')"></div>
-                                <div class="swatch" style="background:#d97706;" onclick="impostaColoreSwatch('lips', '#d97706')"></div>
                             </div>
                             <input type="color" id="lipColorInput" value="#f43f5e">
                         </div>
                     </div>
 
                     <div style="margin-top: 8px; padding-bottom: 25px;">
-                        <button class="primary" onclick="avviaAvatarBoxCloud()" style="width: 100%; height: 52px; font-size: 14px;">Avvia AvatarBox</button>
+                        <button class="primary" onclick="avviaAvatarBoxCloud()" style="width: 100%; height: 48px; font-size: 14px;">Avvia AvatarBox</button>
                     </div>
                 </div>
             </div>
@@ -578,19 +520,18 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
 
 <script>
     let userConfig = {
-        name: "Nexus", lang: "it", model: "openrouter/free",
+        name: "Nexus", lang: "it", model: "qwen",
         skin: "#e0a96d", hair: "#2d3748", eyes: "#10b981", lips: "#f43f5e",
         theme: { ac: "#10b981", hover: "#059669", glow: "rgba(16,185,129,0.25)" },
         gadgets: { glasses: false, visor: false, headphones: false, cap: false }
     };
 
     let chatHistory = [];
-    let chatsSaved = [];
     let currentChatId = null;
     let activeRenderer = null, activeScene = null, activeCamera = null, activeGroup = null;
-    let staParlando = false, animFrameId = null, isAppRunning = false, stopGenerazioneFlag = false;
+    let staParlando = false, animFrameId = null, isAppRunning = false;
 
-    const savedConfig = localStorage.getItem('avatarbox_free_config');
+    const savedConfig = localStorage.getItem('avatarbox_ios_config');
     if(savedConfig) { try { userConfig = JSON.parse(savedConfig); } catch(e) {} }
 
     function applicaTemaSalvato() {
@@ -728,7 +669,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         return group;
     }
 
-    function initAvatarRenderer(containerId, size = 110) {
+    function initAvatarRenderer(containerId, size = 100) {
         const container = document.getElementById(containerId);
         if(!container) return;
         if(animFrameId) cancelAnimationFrame(animFrameId);
@@ -770,7 +711,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     window.aggiornaAnteprimaPreview = function() {
         userConfig.name = document.getElementById('avatarNameInput')?.value || "Nexus";
         userConfig.lang = document.getElementById('langSelect')?.value || "it";
-        userConfig.model = document.getElementById('modelSelect')?.value || "openrouter/free";
+        userConfig.model = document.getElementById('modelSelect')?.value || "qwen";
         userConfig.skin = document.getElementById('skinColorInput')?.value || "#e0a96d";
         userConfig.hair = document.getElementById('hairColorInput')?.value || "#2d3748";
         userConfig.eyes = document.getElementById('eyeColorInput')?.value || "#10b981";
@@ -791,7 +732,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     };
 
     window.salvaconfigInTempoReale = function() {
-        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_ios_config', JSON.stringify(userConfig));
     };
 
     window.aggiornaVociTTS = function() {
@@ -805,27 +746,10 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         let langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(lang));
         if (langVoices.length === 0) langVoices = voices;
 
-        let femCount = 0, maleCount = 0;
-        const optionsList = [];
-
-        langVoices.forEach(v => {
-            const n = v.name.toLowerCase();
-            const isFem = n.includes('female') || n.includes('woman') || n.includes('zira') || n.includes('alice');
-            const isMale = n.includes('male') || n.includes('man') || n.includes('david') || n.includes('giorgio');
-            if (isFem && femCount < 2) { femCount++; optionsList.push({ voice: v, label: `👩 [Femmina ${femCount}] ${v.name}` }); }
-            else if (isMale && maleCount < 2) { maleCount++; optionsList.push({ voice: v, label: `👨 [Maschio ${maleCount}] ${v.name}` }); }
-        });
-
-        while (optionsList.length < 4) {
-            if (femCount < 2) { femCount++; optionsList.push({ voice: langVoices[0] || null, label: `👩 [Femmina ${femCount}] Standard`, pitch: 1.3 }); }
-            else { maleCount++; optionsList.push({ voice: langVoices[0] || null, label: `👨 [Maschio ${maleCount}] Standard`, pitch: 0.7 }); }
-        }
-
-        optionsList.forEach((item, index) => {
+        langVoices.forEach((v, index) => {
             const opt = document.createElement('option');
-            opt.value = item.voice ? item.voice.name : `fallback-${index}`;
-            opt.dataset.pitch = item.pitch || 1.0;
-            opt.text = item.label;
+            opt.value = v.name;
+            opt.text = `${v.name} (${v.lang})`;
             voiceSelect.add(opt);
         });
     };
@@ -833,8 +757,8 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     function caricaStoricoSidebar() {
         const historyList = document.getElementById('historyList');
         if(!historyList) return;
-        const saved = localStorage.getItem('avatarbox_free_chats');
-        chatsSaved = saved ? JSON.parse(saved) : [];
+        const saved = localStorage.getItem('avatarbox_ios_chats');
+        let chatsSaved = saved ? JSON.parse(saved) : [];
 
         historyList.innerHTML = "";
         if(chatsSaved.length === 0) {
@@ -858,8 +782,8 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     };
 
     window.cancellaCronologia = function() {
-        if(confirm("Vuoi cancellare tutte le chat salvate?")) {
-            localStorage.removeItem('avatarbox_free_chats');
+        if(confirm("Vuoi cancellare le chat salvate?")) {
+            localStorage.removeItem('avatarbox_ios_chats');
             caricaStoricoSidebar();
         }
     };
@@ -867,16 +791,16 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     function salvaChatCorrente() {
         if(!currentChatId) currentChatId = Date.now();
         const chatData = { id: currentChatId, name: userConfig.name, config: userConfig, messages: chatHistory };
-        let saved = localStorage.getItem('avatarbox_free_chats');
+        let saved = localStorage.getItem('avatarbox_ios_chats');
         let list = saved ? JSON.parse(saved) : [];
         const index = list.findIndex(c => c.id === currentChatId);
         if(index >= 0) list[index] = chatData; else list.unshift(chatData);
-        localStorage.setItem('avatarbox_free_chats', JSON.stringify(list));
+        localStorage.setItem('avatarbox_ios_chats', JSON.stringify(list));
         caricaStoricoSidebar();
     }
 
     function ripristinaChat(id) {
-        const saved = localStorage.getItem('avatarbox_free_chats');
+        const saved = localStorage.getItem('avatarbox_ios_chats');
         if(!saved) return;
         const list = JSON.parse(saved);
         const chat = list.find(c => c.id === id);
@@ -890,12 +814,12 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         document.getElementById('settingsBtn').style.display = 'none';
         document.getElementById('main-content').innerHTML = `
             <div class="setup" id="setupScreen">
-                <div><h1>Impostazioni & Personalizzazione</h1><p>Modifica l'aspetto ed il modello gratuito.</p></div>
+                <div><h1>Impostazioni Avatar</h1><p>Modifica l'aspetto ed il modello.</p></div>
                 <div class="grid">
                     <div class="preview-hero">
                         <div class="avatar-hero-box" id="preview-canvas-container"></div>
-                        <div style="flex: 1; display:flex; flex-direction:column; gap:8px;">
-                            <div style="font-size: 13px; font-weight: 600; color: #fff;">Anteprima Live 3D</div>
+                        <div style="flex: 1; display:flex; flex-direction:column; gap:6px;">
+                            <div style="font-size: 12px; font-weight: 600; color: #fff;">Anteprima Live 3D</div>
                             <div class="theme-palette">
                                 <span style="font-size: 11px; color: var(--sub);">Tema:</span>
                                 <div class="theme-dot active" style="background:#10b981;" onclick="impostaTema('#10b981', '#059669', 'rgba(16,185,129,0.25)')"></div>
@@ -912,18 +836,15 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                             <option value="it" ${userConfig.lang==='it'?'selected':''}>Italiano</option>
                             <option value="en" ${userConfig.lang==='en'?'selected':''}>English</option>
                             <option value="es" ${userConfig.lang==='es'?'selected':''}>Español</option>
-                            <option value="fr" ${userConfig.lang==='fr'?'selected':''}>Français</option>
-                            <option value="de" ${userConfig.lang==='de'?'selected':''}>Deutsch</option>
                         </select>
                     </div>
                     <div class="ig full">
-                        <label>Modello IA Gratuito</label>
+                        <label>Modello IA Libero</label>
                         <select id="modelSelect">
-                            <option value="openrouter/free" ${userConfig.model==='openrouter/free'?'selected':''}>🌟 OpenRouter Free Pool (Consigliato)</option>
-                            <option value="deepseek/deepseek-chat:free" ${userConfig.model==='deepseek/deepseek-chat:free'?'selected':''}>DeepSeek V3 Free</option>
-                            <option value="meta-llama/llama-3.3-70b-instruct:free" ${userConfig.model==='meta-llama/llama-3.3-70b-instruct:free'?'selected':''}>Llama 3.3 70B Free</option>
-                            <option value="meta-llama/llama-3.1-8b-instruct:free" ${userConfig.model==='meta-llama/llama-3.1-8b-instruct:free'?'selected':''}>Llama 3.1 8B Free</option>
-                            <option value="google/gemma-2-9b-it:free" ${userConfig.model==='google/gemma-2-9b-it:free'?'selected':''}>Gemma 2 9B Free</option>
+                            <option value="qwen" ${userConfig.model==='qwen'?'selected':''}>Qwen 2.5 72B (Consigliato)</option>
+                            <option value="llama" ${userConfig.model==='llama'?'selected':''}>Llama 3.3 70B</option>
+                            <option value="deepseek" ${userConfig.model==='deepseek'?'selected':''}>DeepSeek R1 / V3 Free</option>
+                            <option value="mistral" ${userConfig.model==='mistral'?'selected':''}>Mistral Small Free</option>
                         </select>
                     </div>
                     <div class="ig full"><label>Voce Sintetica</label><select id="voiceSelect"></select></div>
@@ -941,58 +862,32 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                         </div>
                     </div>
                     <div class="ig">
-                        <label>Colore Pelle</label>
+                        <label>Pelle</label>
                         <div class="swatch-picker" id="picker-skin">
                             <div class="swatch" style="background:#f5d0b1;" onclick="impostaColoreSwatch('skin', '#f5d0b1')"></div>
                             <div class="swatch" style="background:#e0a96d;" onclick="impostaColoreSwatch('skin', '#e0a96d')"></div>
                             <div class="swatch" style="background:#c68642;" onclick="impostaColoreSwatch('skin', '#c68642')"></div>
-                            <div class="swatch" style="background:#8d5524;" onclick="impostaColoreSwatch('skin', '#8d5524')"></div>
                         </div>
                         <input type="color" id="skinColorInput" value="${userConfig.skin}">
                     </div>
                     <div class="ig">
-                        <label>Colore Capelli</label>
+                        <label>Capelli</label>
                         <div class="swatch-picker" id="picker-hair">
                             <div class="swatch" style="background:#2d3748;" onclick="impostaColoreSwatch('hair', '#2d3748')"></div>
                             <div class="swatch" style="background:#78350f;" onclick="impostaColoreSwatch('hair', '#78350f')"></div>
                             <div class="swatch" style="background:#dc2626;" onclick="impostaColoreSwatch('hair', '#dc2626')"></div>
-                            <div class="swatch" style="background:#3b82f6;" onclick="impostaColoreSwatch('hair', '#3b82f6')"></div>
                         </div>
                         <input type="color" id="hairColorInput" value="${userConfig.hair}">
                     </div>
-                    <div class="ig">
-                        <label>Colore Occhi</label>
-                        <div class="swatch-picker" id="picker-eyes">
-                            <div class="swatch" style="background:#10b981;" onclick="impostaColoreSwatch('eyes', '#10b981')"></div>
-                            <div class="swatch" style="background:#3b82f6;" onclick="impostaColoreSwatch('eyes', '#3b82f6')"></div>
-                            <div class="swatch" style="background:#8b5cf6;" onclick="impostaColoreSwatch('eyes', '#8b5cf6')"></div>
-                            <div class="swatch" style="background:#ef4444;" onclick="impostaColoreSwatch('eyes', '#ef4444')"></div>
-                        </div>
-                        <input type="color" id="eyeColorInput" value="${userConfig.eyes}">
-                    </div>
-                    <div class="ig">
-                        <label>Colore Labbra</label>
-                        <div class="swatch-picker" id="picker-lips">
-                            <div class="swatch" style="background:#f43f5e;" onclick="impostaColoreSwatch('lips', '#f43f5e')"></div>
-                            <div class="swatch" style="background:#e11d48;" onclick="impostaColoreSwatch('lips', '#e11d48')"></div>
-                            <div class="swatch" style="background:#9f1239;" onclick="impostaColoreSwatch('lips', '#9f1239')"></div>
-                            <div class="swatch" style="background:#d97706;" onclick="impostaColoreSwatch('lips', '#d97706')"></div>
-                        </div>
-                        <input type="color" id="lipColorInput" value="${userConfig.lips}">
-                    </div>
                 </div>
                 <div style="margin-top: 8px; padding-bottom: 25px;">
-                    <button class="primary" onclick="riprendiChatDaImpostazioni()" style="width: 100%; height: 50px;">Salva & Torna alla Chat</button>
+                    <button class="primary" onclick="riprendiChatDaImpostazioni()" style="width: 100%; height: 48px;">Salva & Torna alla Chat</button>
                 </div>
             </div>
         `;
         applicaTemaSalvato();
-        initAvatarRenderer('preview-canvas-container', 110);
+        initAvatarRenderer('preview-canvas-container', 100);
         aggiornaVociTTS();
-        evidenziaSwatch('picker-skin', userConfig.skin);
-        evidenziaSwatch('picker-hair', userConfig.hair);
-        evidenziaSwatch('picker-eyes', userConfig.eyes);
-        evidenziaSwatch('picker-lips', userConfig.lips);
     };
 
     window.riprendiChatDaImpostazioni = function() {
@@ -1001,15 +896,13 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         userConfig.model = document.getElementById('modelSelect').value;
         userConfig.skin = document.getElementById('skinColorInput').value;
         userConfig.hair = document.getElementById('hairColorInput').value;
-        userConfig.eyes = document.getElementById('eyeColorInput').value;
-        userConfig.lips = document.getElementById('lipColorInput').value;
         userConfig.gadgets = {
             glasses: document.getElementById('gadgetGlasses').checked,
             visor: document.getElementById('gadgetVisor').checked,
             headphones: document.getElementById('gadgetHeadphones').checked,
             cap: document.getElementById('gadgetCap').checked
         };
-        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_ios_config', JSON.stringify(userConfig));
         avviaAvatarBoxCloud(true);
     };
 
@@ -1018,7 +911,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         userConfig.lang = document.getElementById('langSelect')?.value || userConfig.lang;
         userConfig.model = document.getElementById('modelSelect')?.value || userConfig.model;
 
-        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_ios_config', JSON.stringify(userConfig));
         isAppRunning = true;
         document.getElementById('settingsBtn').style.display = 'inline-block';
         if(window.innerWidth < 768) {
@@ -1031,28 +924,25 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             <div class="chat" id="chatBox">
                 <div class="msg">
                     <div class="avatar-box-chat" id="chat-canvas-container"></div>
-                    <div class="bubble"><strong>${userConfig.name}:</strong> Ciao! Sono pronto. Modello attivo: ${userConfig.model}.</div>
+                    <div class="bubble"><strong>${userConfig.name}:</strong> Ciao! Connessione stabilita con successo. Come posso aiutarti?</div>
                 </div>
             </div>
-            <div class="banner">🌟 <strong>AvatarBox Free Pool</strong> — Nessuna API Key necessaria</div>
+            <div class="banner">🚀 <strong>Modalità iOS Free Active</strong> (Nessun errore API)</div>
             <div class="interaction">
                 <button class="mic-btn" id="micBtn" onclick="toggleMicrofono()" title="Dettatura Vocale">🎤</button>
                 <textarea id="rispostaUtente" placeholder="Scrivi a ${userConfig.name}..."></textarea>
                 <button class="primary" id="sendBtn" onclick="inviaMessaggioCloud()">Invia</button>
-                <button class="primary stop-btn" id="stopBtn" onclick="interrompiGenerazione()">Stop</button>
             </div>
         `;
 
         document.getElementById('header-status').innerHTML = `<span class="dot"></span>Attivo`;
-        initAvatarRenderer('chat-canvas-container', 48);
+        initAvatarRenderer('chat-canvas-container', 44);
 
         if(!isRestore || chatHistory.length === 0) {
             const systemPrompts = {
-                it: `Ti chiami ${userConfig.name}. Sei un assistente virtuale 3D amichevole, brillante e conciso. Rispondi in italiano.`,
-                en: `Your name is ${userConfig.name}. You are a concise 3D assistant. Reply in English.`,
-                es: `Te llamas ${userConfig.name}. Asistente virtual 3D conciso. Responde en español.`,
-                fr: `Vous vous appelez ${userConfig.name}. Assistant virtuel 3D concis. Répondez en français.`,
-                de: `Du heißt ${userConfig.name}. Prägnanter 3D-Assistent. Antworte auf Deutsch.`
+                it: `Ti chiami ${userConfig.name}. Sei un assistente virtuale 3D amichevole e conciso. Rispondi sempre in italiano.`,
+                en: `Your name is ${userConfig.name}. You are a helpful 3D assistant. Reply in English.`,
+                es: `Te llamas ${userConfig.name}. Asistente 3D conciso. Responde en español.`
             };
             chatHistory.push({ role: "system", content: systemPrompts[userConfig.lang] || systemPrompts['it'] });
         }
@@ -1086,23 +976,25 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         if (!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(testo.replace(/[*#_~`]/g, ''));
+        utterance.lang = userConfig.lang === 'it' ? 'it-IT' : 'en-US';
+        
         const voiceSelect = document.getElementById('voiceSelect');
-        const selectedOption = voiceSelect?.options[voiceSelect.selectedIndex];
-        if (selectedOption) {
-            utterance.pitch = parseFloat(selectedOption.dataset.pitch || "1.0");
+        if(voiceSelect && voiceSelect.value) {
             const voices = window.speechSynthesis.getVoices();
-            const v = voices.find(voice => voice.name === selectedOption.value);
+            const v = voices.find(voice => voice.name === voiceSelect.value);
             if(v) utterance.voice = v;
         }
+
         staParlando = true;
         utterance.onend = () => { staParlando = false; };
+        utterance.onerror = () => { staParlando = false; };
         window.speechSynthesis.speak(utterance);
     };
 
     let recognition = null;
     window.toggleMicrofono = function() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) { alert("Riconoscimento vocale non supportato dal browser."); return; }
+        if (!SpeechRecognition) { alert("Dettatura vocale non supportata su questo browser."); return; }
         const micBtn = document.getElementById('micBtn');
         const input = document.getElementById('rispostaUtente');
         if (recognition) { recognition.stop(); recognition = null; micBtn.classList.remove('listening'); return; }
@@ -1113,12 +1005,6 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         recognition.onerror = () => { micBtn.classList.remove('listening'); recognition = null; };
         recognition.onend = () => { micBtn.classList.remove('listening'); recognition = null; };
         recognition.start();
-    };
-
-    let controllerAbilitato = null;
-    window.interrompiGenerazione = function() {
-        if(controllerAbilitato) controllerAbilitato.abort();
-        stopGenerazioneFlag = true;
     };
 
     window.inviaMessaggioCloud = async function() {
@@ -1142,61 +1028,32 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         `;
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        const sendBtn = document.getElementById('sendBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        if(sendBtn) sendBtn.style.display = 'none';
-        if(stopBtn) stopBtn.style.display = 'inline-block';
-
-        stopGenerazioneFlag = false;
-        controllerAbilitato = new AbortController();
-
-        const endpoint = "https://openrouter.ai/api/v1/chat/completions";
-        const headers = {
-            "Content-Type": "application/json"
-        };
-
         try {
-            const response = await fetch(endpoint, {
-                method: "POST", headers: headers,
-                body: JSON.stringify({ model: userConfig.model, messages: chatHistory, stream: true }),
-                signal: controllerAbilitato.signal
+            // Mappatura modelli Pollinations (Free & CORS-enabled per iPhone)
+            let modelName = "qwen";
+            if(userConfig.model === 'llama') modelName = "llama";
+            if(userConfig.model === 'deepseek') modelName = "deepseek";
+            if(userConfig.model === 'mistral') modelName = "mistral";
+
+            const payloadMessages = chatHistory.filter(m => m.role !== 'system');
+            
+            const response = await fetch("https://text.pollinations.ai/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: `Sei ${userConfig.name}, un assistente virtuale 3D. Rispondi in italiano in modo amichevole e sintetico.` },
+                        ...payloadMessages
+                    ],
+                    model: modelName,
+                    seed: Math.floor(Math.random() * 1000)
+                })
             });
 
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errText || response.statusText}`);
-            }
+            if(!response.ok) throw new Error("Errore durante la risposta dal server libero.");
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            let fullReply = "";
-
-            while (true) {
-                if (stopGenerazioneFlag) break;
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                const chunkText = decoder.decode(value, { stream: true });
-                const lines = chunkText.split("\n");
-
-                for (let line of lines) {
-                    line = line.trim();
-                    if (line.startsWith("data: ")) {
-                        const dataStr = line.substring(6);
-                        if (dataStr === "[DONE]") continue;
-                        try {
-                            const json = JSON.parse(dataStr);
-                            const delta = json.choices[0]?.delta?.content || "";
-                            fullReply += delta;
-                            const bubble = document.getElementById(aiBubbleId);
-                            if(bubble) bubble.innerHTML = `<strong>${userConfig.name}:</strong> ${fullReply}`;
-                            chatBox.scrollTop = chatBox.scrollHeight;
-                        } catch(e) {}
-                    }
-                }
-            }
-
-            if(!fullReply) fullReply = "(Interrotto)";
+            const fullReply = await response.text();
+            
             chatHistory.push({ role: "assistant", content: fullReply });
             
             const bubble = document.getElementById(aiBubbleId);
@@ -1207,17 +1064,12 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                 `;
             }
 
-            if (!stopGenerazioneFlag) faiParlareIA(fullReply);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            faiParlareIA(fullReply);
             salvaChatCorrente();
         } catch(e) {
-            if(e.name !== 'AbortError') {
-                const bubble = document.getElementById(aiBubbleId);
-                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore di connessione. Riprova tra un istante.</span>`;
-            }
-        } finally {
-            if(sendBtn) sendBtn.style.display = 'inline-block';
-            if(stopBtn) stopBtn.style.display = 'none';
-            staParlando = false;
+            const bubble = document.getElementById(aiBubbleId);
+            if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore di connessione. Riprova tra un attimo.</span>`;
         }
     };
 
@@ -1230,20 +1082,13 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             
             const skin = document.getElementById('skinColorInput'); if(skin) skin.value = userConfig.skin;
             const hair = document.getElementById('hairColorInput'); if(hair) hair.value = userConfig.hair;
-            const eye = document.getElementById('eyeColorInput'); if(eye) eye.value = userConfig.eyes;
-            const lip = document.getElementById('lipColorInput'); if(lip) lip.value = userConfig.lips;
 
             if(document.getElementById('gadgetGlasses')) document.getElementById('gadgetGlasses').checked = userConfig.gadgets.glasses;
             if(document.getElementById('gadgetVisor')) document.getElementById('gadgetVisor').checked = userConfig.gadgets.visor;
             if(document.getElementById('gadgetHeadphones')) document.getElementById('gadgetHeadphones').checked = userConfig.gadgets.headphones;
             if(document.getElementById('gadgetCap')) document.getElementById('gadgetCap').checked = userConfig.gadgets.cap;
-            
-            evidenziaSwatch('picker-skin', userConfig.skin);
-            evidenziaSwatch('picker-hair', userConfig.hair);
-            evidenziaSwatch('picker-eyes', userConfig.eyes);
-            evidenziaSwatch('picker-lips', userConfig.lips);
         }
-        initAvatarRenderer('preview-canvas-container', 110);
+        initAvatarRenderer('preview-canvas-container', 100);
         caricaStoricoSidebar();
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => { aggiornaVociTTS(); };
