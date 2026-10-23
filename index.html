@@ -1,10 +1,34 @@
+L'errore è chiarissimo e ci spiega esattamente cosa non va: Google AI Studio rifiuta la stringa del modello (`gemini-1.5-pro` o simili) perché richiede nomi di modelli specifici compatibili con il suo livello di API.
+
+Nel codice precedente la lista dei modelli di Gemini conteneva voci obsolete o non mappate correttamente sull'endpoint OpenAI-compatibile di Google.
+
+### Come risolvere subito nel codice:
+
+Nel blocco JavaScript, cerca la funzione `aggiornaModelliDisponibili()` e sostituisci la sezione dedicata a `gemini` con i nomi corretti supportati da Google (`gemini-2.5-flash` o `gemini-1.5-flash`).
+
+Ecco la porzione esatta da aggiornare dentro il tuo `<script>`:
+
+```javascript
+        } else if(provider === 'gemini') {
+            opzioni = [
+                {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash"},
+                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash"}
+            ];
+        }
+
+```
+
+### Codice Completo Aggiornato
+
+Copia questo codice finale, incollalo nel file `index.html` su GitHub e fai il **Commit changes**:
+
+```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AvatarBox — Il tuo Avatar 3D & IA Cloud</title>
-    <!-- Three.js per la grafica 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -24,24 +48,10 @@
             scrollbar-color: rgba(16, 185, 129, 0.4) rgba(0, 0, 0, 0.2);
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(16, 185, 129, 0.4);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.4); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         body {
             background-color: var(--bg-base);
@@ -108,11 +118,7 @@
 
         .brand-title span { color: var(--accent); }
 
-        .header-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
 
         .icon-btn {
             background: rgba(255, 255, 255, 0.06);
@@ -125,333 +131,122 @@
             transition: all 0.2s;
         }
 
-        .icon-btn:hover {
-            background: rgba(16, 185, 129, 0.2);
-            border-color: var(--accent);
-        }
+        .icon-btn:hover { background: rgba(16, 185, 129, 0.2); border-color: var(--accent); }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 12px #10b981;
-            margin-right: 6px;
+            width: 8px; height: 8px;
+            background-color: #10b981; border-radius: 50%;
+            display: inline-block; box-shadow: 0 0 12px #10b981; margin-right: 6px;
         }
 
-        #app-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-        }
+        #app-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
         #sidebar {
-            width: 240px;
-            background: rgba(8, 11, 16, 0.7);
+            width: 240px; background: rgba(8, 11, 16, 0.7);
             border-right: 1px solid var(--panel-border);
-            display: flex;
-            flex-direction: column;
-            padding: 14px;
-            gap: 10px;
-            flex-shrink: 0;
-            display: none;
+            display: flex; flex-direction: column; padding: 14px; gap: 10px; flex-shrink: 0; display: none;
         }
 
-        @media (min-width: 768px) {
-            #sidebar { display: flex; }
-        }
+        @media (min-width: 768px) { #sidebar { display: flex; } }
 
-        #sidebar h3 {
-            font-size: 11.5px;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 4px 0;
-        }
+        #sidebar h3 { font-size: 11.5px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 4px 0; }
 
-        .history-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding-right: 4px;
-        }
+        .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
 
         .history-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--panel-border);
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-sub);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--panel-border);
+            padding: 8px 10px; border-radius: 8px; font-size: 12px; cursor: pointer;
+            transition: all 0.2s; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .history-item:hover {
-            background: rgba(16, 185, 129, 0.1);
-            color: #fff;
-            border-color: rgba(16, 185, 129, 0.3);
-        }
+        .history-item:hover { background: rgba(16, 185, 129, 0.1); color: #fff; border-color: rgba(16, 185, 129, 0.3); }
 
-        #screen {
-            flex: 1;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        #screen { flex: 1; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
 
         .setup-screen {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            max-width: 560px;
-            margin: 0 auto;
-            text-align: left;
-            gap: 12px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 4px 8px 30px 4px;
+            display: flex; flex-direction: column; height: 100%; max-width: 560px; margin: 0 auto;
+            text-align: left; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 8px 30px 4px;
         }
 
-        .setup-screen h1 {
-            color: #f9fafb;
-            font-size: 18px;
-            margin: 0;
-            text-align: center;
-        }
+        .setup-screen h1 { color: #f9fafb; font-size: 18px; margin: 0; text-align: center; }
+        .setup-screen p { color: var(--text-sub); font-size: 11.5px; margin: 0; text-align: center; }
 
-        .setup-screen p {
-            color: var(--text-sub);
-            font-size: 11.5px;
-            margin: 0;
-            text-align: center;
-        }
-
-        .config-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        @media (min-width: 600px) {
-            .config-grid { grid-template-columns: 1fr 1fr; }
-        }
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media (min-width: 600px) { .config-grid { grid-template-columns: 1fr 1fr; } }
 
         .input-group {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 11.5px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            border: 1px solid var(--panel-border);
+            background: rgba(0, 0, 0, 0.3); padding: 8px 12px; border-radius: 8px;
+            font-size: 11.5px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--panel-border);
         }
-
         .input-group.full-width { grid-column: 1 / -1; }
 
         label { color: var(--text-sub); font-weight: 500; }
 
         input[type="text"], select, input[type="password"] {
-            background: rgba(10, 14, 20, 0.85);
-            color: #fff;
-            border: 1px solid var(--panel-border);
-            padding: 6px 8px;
-            font-family: 'Fira Code', monospace;
-            border-radius: 6px;
-            font-size: 12px;
-            width: 100%;
-            box-sizing: border-box;
-            outline: none;
+            background: rgba(10, 14, 20, 0.85); color: #fff; border: 1px solid var(--panel-border);
+            padding: 6px 8px; font-family: 'Fira Code', monospace; border-radius: 6px; font-size: 12px; width: 100%; box-sizing: border-box; outline: none;
         }
 
-        input[type="color"] {
-            border: none;
-            width: 100%;
-            height: 26px;
-            cursor: pointer;
-            background: none;
-            border-radius: 4px;
-        }
+        input[type="color"] { border: none; width: 100%; height: 26px; cursor: pointer; background: none; border-radius: 4px; }
 
-        .checkbox-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 2px;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            color: var(--text-main);
-            font-size: 11px;
-        }
+        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
+        .checkbox-group label { display: flex; align-items: center; gap: 4px; cursor: pointer; color: var(--text-main); font-size: 11px; }
 
         .preview-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            background: rgba(0, 0, 0, 0.35);
-            padding: 10px;
-            border-radius: 10px;
-            grid-column: 1 / -1;
-            border: 1px solid var(--panel-border);
+            display: flex; align-items: center; justify-content: center; gap: 16px;
+            background: rgba(0, 0, 0, 0.35); padding: 10px; border-radius: 10px; grid-column: 1 / -1; border: 1px solid var(--panel-border);
         }
 
         .avatar-canvas-box {
-            width: 75px;
-            height: 75px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.12);
-            background: #0d1117;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 75px; height: 75px; border-radius: 10px; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.12); background: #0d1117; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
         }
 
         .chat-container {
-            flex: 1;
-            background: rgba(8, 11, 16, 0.7);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 14px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
+            flex: 1; background: rgba(8, 11, 16, 0.7); border: 1px solid var(--panel-border);
+            border-radius: 12px; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
         }
 
-        .message-row {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
+        .message-row { display: flex; gap: 12px; align-items: flex-start; }
 
         .message-bubble {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--panel-border);
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            line-height: 1.5;
-            color: #e5e7eb;
-            max-width: 520px;
-            word-break: break-word;
-            position: relative;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--panel-border);
+            padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: #e5e7eb; max-width: 520px; word-break: break-word; position: relative;
         }
-
-        .message-bubble.user {
-            background: rgba(16, 185, 129, 0.12);
-            border-color: rgba(16, 185, 129, 0.3);
-            margin-left: auto;
-        }
+        .message-bubble.user { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); margin-left: auto; }
 
         .tts-action-btn {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid var(--accent);
-            color: #34d399;
-            font-size: 10.5px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            background: rgba(16, 185, 129, 0.2); border: 1px solid var(--accent); color: #34d399;
+            font-size: 10.5px; padding: 4px 8px; border-radius: 6px; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;
         }
-
-        .tts-action-btn:hover {
-            background: var(--accent);
-            color: #fff;
-        }
+        .tts-action-btn:hover { background: var(--accent); color: #fff; }
 
         .ad-banner {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 5px;
-            text-align: center;
-            font-size: 10px;
-            color: var(--text-sub);
-            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 8px; padding: 5px; text-align: center; font-size: 10px; color: var(--text-sub); margin-bottom: 6px;
         }
 
-        .input-interaction {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            align-items: center;
-        }
+        .input-interaction { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
 
         textarea {
-            flex: 1;
-            background: rgba(10, 14, 20, 0.85);
-            color: #f3f4f6;
-            border: 1px solid var(--panel-border);
-            padding: 10px;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            border-radius: 10px;
-            resize: none;
-            height: 44px;
-            outline: none;
+            flex: 1; background: rgba(10, 14, 20, 0.85); color: #f3f4f6; border: 1px solid var(--panel-border);
+            padding: 10px; font-family: 'Inter', sans-serif; font-size: 13px; border-radius: 10px; resize: none; height: 44px; outline: none;
         }
 
         button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0 16px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.2s;
-            font-size: 12.5px;
-            height: 44px;
-            flex-shrink: 0;
+            background-color: var(--accent); color: white; border: none; padding: 0 16px;
+            font-weight: 600; cursor: pointer; border-radius: 10px; transition: all 0.2s; font-size: 12.5px; height: 44px; flex-shrink: 0;
         }
-
         button:hover { background-color: var(--accent-hover); }
 
-        .stop-btn {
-            background-color: #ef4444;
-            display: none;
-        }
+        .stop-btn { background-color: #ef4444; display: none; }
         .stop-btn:hover { background-color: #dc2626; }
 
         .mic-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--panel-border);
-            width: 44px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.08); border: 1px solid var(--panel-border); width: 44px; padding: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
         }
-
-        .mic-btn.listening {
-            background: #ef4444;
-            border-color: #f87171;
-            animation: pulse-mic 1.2s infinite;
-        }
+        .mic-btn.listening { background: #ef4444; border-color: #f87171; animation: pulse-mic 1.2s infinite; }
 
         @keyframes pulse-mic {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
@@ -769,7 +564,7 @@
         } else if(provider === 'gemini') {
             opzioni = [
                 {val: "gemini-2.5-flash", label: "Gemini 2.5 Flash"},
-                {val: "gemini-1.5-pro", label: "Gemini 1.5 Pro"}
+                {val: "gemini-1.5-flash", label: "Gemini 1.5 Flash"}
             ];
         }
 
@@ -1294,7 +1089,7 @@
         } catch(e) {
             if(e.name !== 'AbortError') {
                 const bubble = document.getElementById(aiBubbleId);
-                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore API / Chiave non valida: ${e.message}</span>`;
+                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore API: ${e.message}</span>`;
             }
         } finally {
             if(sendBtn) sendBtn.style.display = 'inline-block';
@@ -1348,3 +1143,5 @@
 
 </body>
 </html>
+
+```
