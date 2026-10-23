@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvatarBox — Il tuo Avatar 3D & IA Locale</title>
+    <!-- Three.js per la grafica 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-base: #05070a;
+            --panel-bg: rgba(14, 18, 26, 0.88);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text-main: #f3f4f6;
+            --text-sub: #9ca3af;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.08) 0%, transparent 45%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 1020px;
+            height: 740px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header {
+            background: rgba(10, 14, 20, 0.8);
+            padding: 16px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--panel-border);
+            color: #34d399;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .brand-title span { color: var(--accent); }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 12px #10b981;
+            margin-right: 6px;
+        }
+
+        #app-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Storico Chat */
+        #sidebar {
+            width: 240px;
+            background: rgba(8, 11, 16, 0.6);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        #sidebar h3 {
+            font-size: 11.5px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-sub);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: #fff;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        #screen {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+            text-align: center;
+            gap: 14px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .setup-screen h1 {
+            color: #f9fafb;
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .setup-screen p {
+            color: var(--text-sub);
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .input-group {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .input-group.full-width { grid-column: span 2; }
+
+        label { color: var(--text-sub); font-weight: 500; }
+
+        input[type="text"], select {
+            background: rgba(10, 14, 20, 0.85);
+            color: #fff;
+            border: 1px solid var(--panel-border);
+            padding: 6px 8px;
+            font-family: 'Fira Code', monospace;
+            border-radius: 6px;
+            font-size: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="color"] {
+            border: none;
+            width: 100%;
+            height: 26px;
+            cursor: pointer;
+            background: none;
+            border-radius: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 11px;
+        }
+
+        .preview-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 10px;
+            border-radius: 10px;
+            grid-column: span 2;
+            border: 1px solid var(--panel-border);
+        }
+
+        #preview-canvas-container, #chat-canvas-container {
+            width: 85px;
+            height: 85px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.12);
+            background: #0d1117;
+            flex-shrink: 0;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: rgba(8, 11, 16, 0.7);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--panel-border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e5e7eb;
+            max-width: 580px;
+            word-break: break-word;
+        }
+
+        .message-bubble.user {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.3);
+            margin-left: auto;
+        }
+
+        .ad-banner {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            font-size: 10.5px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .input-interaction {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        textarea {
+            flex: 1;
+            background: rgba(10, 14, 20, 0.85);
+            color: #f3f4f6;
+            border: 1px solid var(--panel-border);
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            border-radius: 10px;
+            resize: none;
+            height: 48px;
+            outline: none;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-size: 12.5px;
+        }
+
+        button:hover { background-color: var(--accent-hover); }
+
+        #progress-bar-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <header>
+        <div class="brand-title">Avatar<span>Box</span></div>
+        <div id="header-status" style="color: var(--text-sub);"><span class="status-dot"></span>Configurazione Iniziale</div>
+    </header>
+
+    <div id="app-layout">
+        <!-- Sidebar Storico Chat -->
+        <div id="sidebar">
+            <h3>💬 Cronologia Chat</h3>
+            <button onclick="nuovaChat()" style="padding: 8px; font-size: 11.5px; margin-bottom: 6px;">+ Nuova Chat</button>
+            <div class="history-list" id="historyList">
+                <!-- Verrà popolato dinamicamente -->
+            </div>
+            <button onclick="cancellaCronologia()" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px; font-size: 11px;">Pulisci Storico</button>
+        </div>
+
+        <div id="screen">
+            <div id="main-content">
+                <div class="setup-screen" id="setupScreen">
+                    <div>
+                        <h1>Crea il tuo Avatar 3D</h1>
+                        <p>Personalizza volto, accessori e scegli tra 4 voci sintetiche dedicate.</p>
+                    </div>
+                    
+                    <div class="config-grid">
+                        <div class="preview-container">
+                            <div id="preview-canvas-container"></div>
+                            <div style="font-size: 11.5px; text-align: left; color: var(--text-sub);">
+                                <strong style="color: #fff;">Anteprima Live 3D</strong><br>
+                                Ruota e si adatta in tempo reale.
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Nome Avatar</label>
+                            <input type="text" id="avatarNameInput" value="Nexus">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Lingua IA</label>
+                            <select id="langSelect" onchange="aggiornaVociTTS()">
+                                <option value="it">Italiano</option>
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Modello IA Locale (WebGPU)</label>
+                            <select id="modelSelect">
+                                <option value="Llama-3-8B-Instruct-q4f16_1-MLC">Llama 3 8B (Avanzato)</option>
+                                <option value="Qwen2.5-1.5B-Instruct-q4f16_1-MLC" selected>Qwen 2.5 1.5B (Consigliato / Veloce)</option>
+                                <option value="Phi-3.5-mini-instruct-q4f16_1-MLC">Phi 3.5 Mini (Leggero)</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Voce Sintetica (4 Opzioni: 2F / 2M)</label>
+                            <select id="voiceSelect"></select>
+                        </div>
+
+                        <div class="input-group full-width">
+                            <label>Gadget & Accessori 3D</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="gadgetGlasses" onchange="aggiornaAnteprimaPreview()"> Occhiali da Sole</label>
+                                <label><input type="checkbox" id="gadgetVisor" onchange="aggiornaAnteprimaPreview()"> Visore Cyber</label>
+                                <label><input type="checkbox" id="gadgetHeadphones" onchange="aggiornaAnteprimaPreview()"> Cuffie Audio</label>
+                                <label><input type="checkbox" id="gadgetCap" onchange="aggiornaAnteprimaPreview()"> Cappello Voxel</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Colore Pelle</label>
+                            <input type="color" id="skinColorInput" value="#e0a96d" onchange="aggiornaAnteprimaPreview()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Colore Capelli</label>
+                            <input type="color" id="hairColorInput" value="#2d3748" onchange="aggiornaAnteprimaPreview()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Colore Occhi</label>
+                            <input type="color" id="eyeColorInput" value="#10b981" onchange="aggiornaAnteprimaPreview()">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Colore Labbra</label>
+                            <input type="color" id="lipColorInput" value="#f43f5e" onchange="aggiornaAnteprimaPreview()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button onclick="avviaCostruzioneIA()" style="width: 100%; padding: 12px; margin-top: 4px;">Conferma & Avvia AvatarBox</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+    let engine = null;
+    let userConfig = {
+        name: "Nexus",
+        lang: "it",
+        skin: "#e0a96d",
+        hair: "#2d3748",
+        eyes: "#10b981",
+        lips: "#f43f5e",
+        gadgets: { glasses: false, visor: false, headphones: false, cap: false }
+    };
+
+    let chatHistory = [];
+    let chatsSaved = [];
+    let currentChatId = null;
+
+    let chatRenderer, chatScene, chatCamera, chatGroup;
+    let previewRenderer, previewScene, previewCamera, previewGroup;
+    let staParlando = false;
+    let animFrameId = null;
+
+    function creaTextureVolto(c) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = "#0d1117";
+        ctx.fillRect(0, 0, 128, 128);
+
+        let pattern = [
+            [0,0,1,1,1,1,1,1,1,1,0,0],
+            [0,1,1,1,1,1,1,1,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,2,2,2,2,2,2,2,2,1,1],
+            [1,2,2,2,2,2,2,2,2,2,2,1],
+            [1,2,4,3,2,2,2,2,4,3,2,1],
+            [1,2,2,2,2,2,2,2,2,2,2,1],
+            [1,2,2,2,2,1,1,2,2,2,2,1],
+            [0,2,2,2,6,6,6,6,2,2,2,0],
+            [0,2,2,2,2,2,2,2,2,2,2,0],
+            [0,0,2,2,2,2,2,2,2,2,0,0],
+            [0,0,0,1,1,1,1,1,1,0,0,0]
+        ];
+
+        let pixelSize = 128 / 12;
+        for(let r=0; r<12; r++) {
+            for(let col=0; col<12; col++) {
+                let val = pattern[r][col];
+                if(val === 0) continue;
+                if(val === 1) ctx.fillStyle = c.hair;
+                if(val === 2) ctx.fillStyle = c.skin;
+                if(val === 3) ctx.fillStyle = c.eyes;
+                if(val === 4) ctx.fillStyle = "#ffffff";
+                if(val === 5 || val === 6) ctx.fillStyle = c.lips;
+                ctx.fillRect(col * pixelSize, r * pixelSize, pixelSize, pixelSize);
+            }
+        }
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    function costruisciAvatarGroup(c) {
+        const group = new THREE.Group();
+
+        const texture = creaTextureVolto(c);
+        const materials = [
+            new THREE.MeshStandardMaterial({ color: c.hair }),
+            new THREE.MeshStandardMaterial({ color: c.hair }),
+            new THREE.MeshStandardMaterial({ color: c.hair }),
+            new THREE.MeshStandardMaterial({ color: c.skin }),
+            new THREE.MeshStandardMaterial({ map: texture }),
+            new THREE.MeshStandardMaterial({ color: c.hair })
+        ];
+
+        const headMesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 1.8), materials);
+        group.add(headMesh);
+
+        if(c.gadgets.glasses) {
+            const gMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
+            const glasses = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.35, 0.2), gMat);
+            glasses.position.set(0, 0.1, 0.95);
+            group.add(glasses);
+        }
+
+        if(c.gadgets.visor) {
+            const vMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00f3ff, emissiveIntensity: 0.6 });
+            const visor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.3), vMat);
+            visor.position.set(0, 0.15, 0.92);
+            group.add(visor);
+        }
+
+        if(c.gadgets.headphones) {
+            const hMat = new THREE.MeshStandardMaterial({ color: 0xe11d48 });
+            const cupL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.6, 0.6), hMat);
+            cupL.position.set(-1.0, 0.1, 0);
+            const cupR = cupL.clone();
+            cupR.position.set(1.0, 0.1, 0);
+            const band = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.15, 0.2), hMat);
+            band.position.set(0, 1.0, 0);
+            group.add(cupL); group.add(cupR); group.add(band);
+        }
+
+        if(c.gadgets.cap) {
+            const cMat = new THREE.MeshStandardMaterial({ color: 0x1e40af });
+            const capBase = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.3, 1.9), cMat);
+            capBase.position.set(0, 1.0, 0);
+            const visorPart = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.7), cMat);
+            visorPart.position.set(0, 0.88, 1.1);
+            group.add(capBase); group.add(visorPart);
+        }
+
+        return group;
+    }
+
+    function initPreview3D() {
+        const container = document.getElementById('preview-canvas-container');
+        if(!container) return;
+
+        previewScene = new THREE.Scene();
+        previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+        previewCamera.position.z = 3.6;
+
+        previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        previewRenderer.setSize(85, 85);
+        container.innerHTML = "";
+        container.appendChild(previewRenderer.domElement);
+
+        previewScene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        const pointLight = new THREE.PointLight(0xffffff, 1.2);
+        pointLight.position.set(5, 5, 5);
+        previewScene.add(pointLight);
+
+        aggiornaAnteprimaPreview();
+        
+        function loop() {
+            animFrameId = requestAnimationFrame(loop);
+            if(previewGroup) previewGroup.rotation.y += 0.012;
+            previewRenderer.render(previewScene, previewCamera);
+        }
+        loop();
+    }
+
+    window.aggiornaAnteprimaPreview = function() {
+        userConfig.name = document.getElementById('avatarNameInput').value || "Nexus";
+        userConfig.lang = document.getElementById('langSelect').value;
+        userConfig.skin = document.getElementById('skinColorInput').value;
+        userConfig.hair = document.getElementById('hairColorInput').value;
+        userConfig.eyes = document.getElementById('eyeColorInput').value;
+        userConfig.lips = document.getElementById('lipColorInput').value;
+
+        userConfig.gadgets = {
+            glasses: document.getElementById('gadgetGlasses').checked,
+            visor: document.getElementById('gadgetVisor').checked,
+            headphones: document.getElementById('gadgetHeadphones').checked,
+            cap: document.getElementById('gadgetCap').checked
+        };
+
+        if(previewGroup) previewScene.remove(previewGroup);
+        previewGroup = costruisciAvatarGroup(userConfig);
+        previewScene.add(previewGroup);
+    };
+
+    window.aggiornaVociTTS = function() {
+        const lang = document.getElementById('langSelect').value;
+        const voiceSelect = document.getElementById('voiceSelect');
+        voiceSelect.innerHTML = "";
+
+        if (!('speechSynthesis' in window)) return;
+        const voices = window.speechSynthesis.getVoices();
+        let langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(lang));
+        if (langVoices.length === 0) langVoices = voices;
+
+        let femCount = 0;
+        let maleCount = 0;
+        const optionsList = [];
+
+        langVoices.forEach(v => {
+            const nameLower = v.name.toLowerCase();
+            const isFem = nameLower.includes('female') || nameLower.includes('woman') || nameLower.includes('girl') || nameLower.includes('zira') || nameLower.includes('elsa') || nameLower.includes('monica') || nameLower.includes('alice');
+            const isMale = nameLower.includes('male') || nameLower.includes('man') || nameLower.includes('david') || nameLower.includes('cosimo') || nameLower.includes('giorgio');
+
+            if (isFem && femCount < 2) {
+                femCount++;
+                optionsList.push({ voice: v, label: `👩 [Femmina ${femCount}] ${v.name}` });
+            } else if (isMale && maleCount < 2) {
+                maleCount++;
+                optionsList.push({ voice: v, label: `👨 [Maschio ${maleCount}] ${v.name}` });
+            }
+        });
+
+        for (let i = 0; i < langVoices.length && optionsList.length < 4; i++) {
+            const v = langVoices[i];
+            if (!optionsList.some(item => item.voice.name === v.name)) {
+                if (femCount < 2) {
+                    femCount++;
+                    optionsList.push({ voice: v, label: `👩 [Femmina ${femCount}] ${v.name}` });
+                } else if (maleCount < 2) {
+                    maleCount++;
+                    optionsList.push({ voice: v, label: `👨 [Maschio ${maleCount}] ${v.name}` });
+                }
+            }
+        }
+
+        while (optionsList.length < 4) {
+            if (femCount < 2) {
+                femCount++;
+                optionsList.push({ voice: langVoices[0] || null, label: `👩 [Femmina ${femCount}] Standard`, pitch: 1.3 });
+            } else {
+                maleCount++;
+                optionsList.push({ voice: langVoices[0] || null, label: `👨 [Maschio ${maleCount}] Standard`, pitch: 0.7 });
+            }
+        }
+
+        optionsList.forEach((item, index) => {
+            const opt = document.createElement('option');
+            opt.value = item.voice ? item.voice.name : `fallback-${index}`;
+            opt.dataset.pitch = item.pitch || 1.0;
+            opt.text = item.label;
+            voiceSelect.add(opt);
+        });
+    };
+
+    // Gestione Cronologia LocalStorage
+    function caricaStoricoSidebar() {
+        const historyList = document.getElementById('historyList');
+        const saved = localStorage.getItem('avatarbox_chats');
+        chatsSaved = saved ? JSON.parse(saved) : [];
+
+        historyList.innerHTML = "";
+        if(chatsSaved.length === 0) {
+            historyList.innerHTML = `<div style="font-size:11px; color:var(--text-sub); text-align:center; padding: 10px;">Nessuna chat salvata</div>`;
+            return;
+        }
+
+        chatsSaved.forEach(chat => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerText = `${chat.name} (${new Date(chat.id).toLocaleDateString()})`;
+            div.onclick = () => ripristinaChat(chat.id);
+            historyList.appendChild(div);
+        });
+    }
+
+    window.nuovaChat = function() {
+        currentChatId = null;
+        chatHistory = [];
+        location.reload(); // Ricarica per pulire l'interfaccia e tornare al builder
+    };
+
+    window.cancellaCronologia = function() {
+        if(confirm("Vuoi cancellare tutte le chat salvate in locale?")) {
+            localStorage.removeItem('avatarbox_chats');
+            caricaStoricoSidebar();
+        }
+    };
+
+    function salvaChatCorrente() {
+        if(!currentChatId) currentChatId = Date.now();
+        const chatData = {
+            id: currentChatId,
+            name: userConfig.name,
+            config: userConfig,
+            messages: chatHistory
+        };
+
+        let saved = localStorage.getItem('avatarbox_chats');
+        let list = saved ? JSON.parse(saved) : [];
+        
+        const index = list.findIndex(c => c.id === currentChatId);
+        if(index >= 0) {
+            list[index] = chatData;
+        } else {
+            list.unshift(chatData);
+        }
+
+        localStorage.setItem('avatarbox_chats', JSON.stringify(list));
+        caricaStoricoSidebar();
+    }
+
+    function ripristinaChat(id) {
+        const saved = localStorage.getItem('avatarbox_chats');
+        if(!saved) return;
+        const list = JSON.parse(saved);
+        const chat = list.find(c => c.id === id);
+        if(!chat) return;
+
+        currentChatId = chat.id;
+        userConfig = chat.config;
+        chatHistory = chat.messages;
+
+        avviaCostruzioneIA(true); // true indica di saltare il download se già in cache o ripristinare direttamente la chat
+    }
+
+    window.avviaCostruzioneIA = async function(isRestore = false) {
+        if(animFrameId) cancelAnimationFrame(animFrameId);
+
+        const selectedModel = document.getElementById('modelSelect') ? document.getElementById('modelSelect').value : "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="chat-container" id="chatBox">
+                <div class="message-row">
+                    <div id="chat-canvas-container"></div>
+                    <div class="message-bubble" id="loading-msg">
+                        <strong>Caricamento AvatarBox:</strong> Inizializzazione modello (${selectedModel}) via WebGPU...<br>
+                        <div id="progress-bar-container"><div id="progress-bar"></div></div>
+                        <small id="load-status" style="color: var(--text-sub); display: block; margin-top: 6px;">Preparazione shader WebGPU...</small>
+                    </div>
+                </div>
+            </div>
+            <div class="ad-banner">📢 <strong>AvatarBox Sponsored</strong> — Sponsorizza il tuo brand qui</div>
+            <div class="input-interaction">
+                <textarea id="rispostaUtente" placeholder="Caricamento in corso..." disabled></textarea>
+                <button id="sendBtn" disabled>Invia</button>
+            </div>
+        `;
+
+        document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>Inizializzazione IA...`;
+        initChat3D();
+
+        const initProgressCallback = (progress) => {
+            let percentage = Math.round(progress.progress * 100);
+            const bar = document.getElementById('progress-bar');
+            if(bar) bar.style.width = percentage + "%";
+            const status = document.getElementById('load-status');
+            if(status) status.innerText = `${progress.text} (${percentage}%)`;
+        };
+
+        try {
+            engine = await webllm.CreateMLCEngine(
+                selectedModel,
+                { initProgressCallback: initProgressCallback }
+            );
+
+            if(!isRestore || chatHistory.length === 0) {
+                const systemPrompts = {
+                    it: `Ti chiami ${userConfig.name}. Sei un assistente virtuale 3D brillante, amichevole e conciso. Rispondi sempre in italiano.`,
+                    en: `Your name is ${userConfig.name}. You are a bright, friendly, and concise 3D virtual assistant. Always respond in English.`,
+                    es: `Te llamas ${userConfig.name}. Eres un asistente virtual 3D brillante, amigable y conciso. Responde siempre en español.`,
+                    fr: `Vous vous appelez ${userConfig.name}. Vous êtes un assistant virtuel 3D brillant, amical et concis. Répondez toujours en français.`,
+                    de: `Du heißt ${userConfig.name}. Du bist ein intelligenter, freundlicher 3D-Assistent. Antworte immer auf Deutsch.`
+                };
+                chatHistory.push({
+                    role: "system",
+                    content: systemPrompts[userConfig.lang] || systemPrompts['it']
+                });
+            }
+
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = `
+                <div class="message-row">
+                    <div id="chat-canvas-container"></div>
+                    <div class="message-bubble">
+                        <strong>${userConfig.name}:</strong> Modello IA attivo in locale! Cronologia pronta.
+                    </div>
+                </div>
+            `;
+            initChat3D(); // Riconnette il canvas nel box chat
+
+            // Se stiamo ripristinando una chat passata, mostriamo i messaggi salvati
+            if(isRestore) {
+                chatHistory.forEach(msg => {
+                    if(msg.role === 'user') {
+                        chatBox.innerHTML += `<div class="message-row"><div class="message-bubble user"><strong>Tu:</strong> ${msg.content}</div></div>`;
+                    } else if(msg.role === 'assistant') {
+                        chatBox.innerHTML += `<div class="message-row"><div id="chat-canvas-container"></div><div class="message-bubble"><strong>${userConfig.name}:</strong> ${msg.content}</div></div>`;
+                    }
+                });
+            }
+
+            document.getElementById('rispostaUtente').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('rispostaUtente').placeholder = `Scrivi a ${userConfig.name}... (Invio per inviare)`;
+            document.getElementById('header-status').innerHTML = `<span class="status-dot"></span>AvatarBox Attivo (0€ Costi Server)`;
+
+            document.getElementById('sendBtn').onclick = window.inviaMessaggio;
+            document.getElementById('rispostaUtente').addEventListener('keydown', (e) => {
+                if(e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    window.inviaMessaggio();
+                }
+            });
+
+            salvaChatCorrente();
+        } catch (err) {
+            document.getElementById('loading-msg').innerHTML = `<strong style="color: #f87171;">Errore WebGPU: ${err.message}</strong>`;
+        }
+    };
+
+    function initChat3D() {
+        const container = document.getElementById('chat-canvas-container');
+        if(!container) return;
+
+        chatScene = new THREE.Scene();
+        chatCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+        chatCamera.position.z = 3.6;
+
+        chatRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        chatRenderer.setSize(85, 85);
+        container.innerHTML = "";
+        container.appendChild(chatRenderer.domElement);
+
+        chatScene.add(new THREE.AmbientLight(0xffffff, 0.9));
+        const pointLight = new THREE.PointLight(0xffffff, 1.2);
+        pointLight.position.set(5, 5, 5);
+        chatScene.add(pointLight);
+
+        chatGroup = costruisciAvatarGroup(userConfig);
+        chatScene.add(chatGroup);
+
+        function chatLoop() {
+            requestAnimationFrame(chatLoop);
+            if(chatGroup) {
+                chatGroup.rotation.y += staParlando ? 0.035 : 0.008;
+                chatGroup.rotation.x = Math.sin(Date.now() * 0.003) * 0.12;
+            }
+            chatRenderer.render(chatScene, chatCamera);
+        }
+        chatLoop();
+    }
+
+    function faiParlareIA(testo) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(testo.replace(/[*#_~`]/g, ''));
+        const voiceSelect = document.getElementById('voiceSelect');
+        const selectedOption = voiceSelect?.options[voiceSelect.selectedIndex];
+        
+        if (selectedOption) {
+            const voiceName = selectedOption.value;
+            utterance.pitch = parseFloat(selectedOption.dataset.pitch || "1.0");
+            const voices = window.speechSynthesis.getVoices();
+            const v = voices.find(voice => voice.name === voiceName);
+            if(v) utterance.voice = v;
+        }
+        
+        staParlando = true;
+        utterance.onend = () => { staParlando = false; };
+        window.speechSynthesis.speak(utterance);
+    }
+
+    window.inviaMessaggio = async function() {
+        const input = document.getElementById('rispostaUtente');
+        const testo = input.value.trim();
+        if (!testo || !engine) return;
+
+        input.value = "";
+        const chatBox = document.getElementById('chatBox');
+        
+        chatBox.innerHTML += `<div class="message-row"><div class="message-bubble user"><strong>Tu:</strong> ${testo}</div></div>`;
+        chatHistory.push({ role: "user", content: testo });
+
+        const aiBubbleId = "ai-reply-" + Date.now();
+        chatBox.innerHTML += `
+            <div class="message-row">
+                <div id="chat-canvas-container"></div>
+                <div class="message-bubble" id="${aiBubbleId}"><em>AvatarBox sta elaborando...</em></div>
+            </div>
+        `;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        let fullReply = "";
+        staParlando = true;
+
+        try {
+            const completion = await engine.chat.completions.create({
+                messages: chatHistory,
+                stream: true,
+            });
+
+            for await (const chunk of completion) {
+                const delta = chunk.choices[0]?.delta?.content || "";
+                fullReply += delta;
+                const bubble = document.getElementById(aiBubbleId);
+                if(bubble) bubble.innerHTML = `<strong>${userConfig.name}:</strong> ${fullReply}`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            chatHistory.push({ role: "assistant", content: fullReply });
+            faiParlareIA(fullReply);
+            salvaChatCorrente();
+        } catch(e) {
+            const bubble = document.getElementById(aiBubbleId);
+            if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore durante la generazione locale.</span>`;
+            staParlando = false;
+        }
+    };
+
+    window.onload = () => {
+        initPreview3D();
+        caricaStoricoSidebar();
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                aggiornaVociTTS();
+            };
+            aggiornaVociTTS();
+        }
+    };
+</script>
+
+</body>
+</html>
