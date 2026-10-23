@@ -145,6 +145,7 @@ header {
 /* Setup & Wizard */
 .setup-container {
   flex: 1;
+  min-height: 0;
   max-width: 650px;
   margin: 0 auto;
   width: 100%;
@@ -152,7 +153,9 @@ header {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding-bottom: 20px;
+  padding: 10px 4px 30px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .setup-title { font-size: 20px; font-weight: 700; text-align: center; letter-spacing: -0.5px; }
