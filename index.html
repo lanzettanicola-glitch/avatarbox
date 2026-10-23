@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AvatarBox — Premium AI Platform & 3D Avatar</title>
+<title>AvatarBox — Free AI Platform & 3D Avatar</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -214,7 +214,6 @@ header {
 label { color: var(--sub); font-weight: 500; font-size: 11.5px; }
 
 input[type=text],
-input[type=password],
 select,
 textarea {
   background: rgba(8, 12, 18, 0.9);
@@ -433,7 +432,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     <header>
         <div style="display:flex; align-items:center; gap:10px;">
             <button class="icon-btn menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-            <div class="brand">Avatar<span>Box</span> <span style="font-size:10px; padding:2px 6px; background:var(--ac-glow); border-radius:4px; border:1px solid var(--bd);">Pro AI Hub</span></div>
+            <div class="brand">Avatar<span>Box</span> <span style="font-size:10px; padding:2px 6px; background:var(--ac-glow); border-radius:4px; border:1px solid var(--bd);">Free Hub</span></div>
         </div>
         <div class="header-actions">
             <button class="icon-btn" onclick="apriImpostazioni()" id="settingsBtn" style="display:none;">⚙️ Impostazioni</button>
@@ -454,8 +453,8 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             <div id="main-content">
                 <div class="setup" id="setupScreen">
                     <div>
-                        <h1>Crea il tuo Avatar & Scegli l'IA</h1>
-                        <p>Personalizza il tuo assistente 3D e chatta senza limiti con i modelli liberi o pro.</p>
+                        <h1>Crea il tuo Avatar 3D & Chat Gratuita</h1>
+                        <p>Usa i modelli di intelligenza artificiale gratuiti senza alcuna chiave o registrazione.</p>
                     </div>
                     
                     <div class="grid">
@@ -463,7 +462,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                             <div class="avatar-hero-box" id="preview-canvas-container"></div>
                             <div style="flex: 1; display:flex; flex-direction:column; gap:8px;">
                                 <div style="font-size: 13px; font-weight: 600; color: #fff;">Anteprima Live 3D</div>
-                                <div style="font-size: 11.5px; color: var(--sub); line-height: 1.4;">L'avatar reagisce in tempo reale alle modifiche estetiche e all'interazione vocale.</div>
+                                <div style="font-size: 11.5px; color: var(--sub); line-height: 1.4;">L'avatar reagisce in tempo reale alle modifiche ed alla voce.</div>
                                 <div class="theme-palette">
                                     <span style="font-size: 11px; color: var(--sub);">Tema:</span>
                                     <div class="theme-dot active" style="background:#10b981;" onclick="impostaTema('#10b981', '#059669', 'rgba(16,185,129,0.25)')" title="Smeraldo Cyber"></div>
@@ -490,27 +489,18 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                             </select>
                         </div>
 
-                        <div class="ig">
-                            <label>Fornitore IA</label>
-                            <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
-                                <option value="free">Modelli Liberi (Senza API Key)</option>
-                                <option value="openrouter">OpenRouter (Richiede Key)</option>
-                                <option value="groq">Groq (Richiede Key)</option>
-                                <option value="openai">OpenAI (Richiede Key)</option>
+                        <div class="ig full">
+                            <label>Modello IA Gratuito</label>
+                            <select id="modelSelect">
+                                <option value="openrouter/free">🌟 OpenRouter Free Pool (Consigliato / Bilanciato)</option>
+                                <option value="deepseek/deepseek-chat:free">DeepSeek V3 Free</option>
+                                <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Free</option>
+                                <option value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B Free</option>
+                                <option value="google/gemma-2-9b-it:free">Gemma 2 9B Free</option>
                             </select>
                         </div>
 
-                        <div class="ig">
-                            <label>Modello IA</label>
-                            <select id="modelSelect"></select>
-                        </div>
-
                         <div class="ig full">
-                            <label>API Key Personale (Opzionale per modelli liberi)</label>
-                            <input type="password" id="apiKeyInput" placeholder="Nessuna chiave necessaria in modalità libera..." oninput="salvaconfigInTempoReale()">
-                        </div>
-
-                        <div class="ig">
                             <label>Voce Sintetica</label>
                             <select id="voiceSelect"></select>
                         </div>
@@ -588,8 +578,8 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
 
 <script>
     let userConfig = {
-        name: "Nexus", lang: "it", provider: "free", model: "openrouter/free",
-        apiKey: "", skin: "#e0a96d", hair: "#2d3748", eyes: "#10b981", lips: "#f43f5e",
+        name: "Nexus", lang: "it", model: "openrouter/free",
+        skin: "#e0a96d", hair: "#2d3748", eyes: "#10b981", lips: "#f43f5e",
         theme: { ac: "#10b981", hover: "#059669", glow: "rgba(16,185,129,0.25)" },
         gadgets: { glasses: false, visor: false, headphones: false, cap: false }
     };
@@ -600,7 +590,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     let activeRenderer = null, activeScene = null, activeCamera = null, activeGroup = null;
     let staParlando = false, animFrameId = null, isAppRunning = false, stopGenerazioneFlag = false;
 
-    const savedConfig = localStorage.getItem('avatarbox_v3_config');
+    const savedConfig = localStorage.getItem('avatarbox_free_config');
     if(savedConfig) { try { userConfig = JSON.parse(savedConfig); } catch(e) {} }
 
     function applicaTemaSalvato() {
@@ -777,50 +767,10 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         renderLoop();
     }
 
-    window.aggiornaModelliDisponibili = function() {
-        const provider = document.getElementById('providerSelect')?.value || userConfig.provider;
-        const modelSelect = document.getElementById('modelSelect');
-        if(!modelSelect) return;
-        modelSelect.innerHTML = "";
-
-        let opzioni = [];
-        if(provider === 'free') {
-            opzioni = [
-                {val: "openrouter/free", label: "🌟 OpenRouter Free Pool (Consigliato / Sempre Libero)"},
-                {val: "deepseek/deepseek-chat:free", label: "DeepSeek V3 Free"},
-                {val: "meta-llama/llama-3.1-8b-instruct:free", label: "Llama 3.1 8B Free"},
-                {val: "google/gemma-2-9b-it:free", label: "Gemma 2 9B Free"}
-            ];
-        } else if(provider === 'openrouter') {
-            opzioni = [
-                {val: "deepseek/deepseek-chat", label: "DeepSeek V3"},
-                {val: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet"},
-                {val: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B"}
-            ];
-        } else if(provider === 'groq') {
-            opzioni = [
-                {val: "llama-3.1-8b-instant", label: "Llama 3.1 8B (Groq Veloce)"},
-                {val: "llama-3.3-70b-versatile", label: "Llama 3.3 70B (Groq Avanzato)"}
-            ];
-        } else if(provider === 'openai') {
-            opzioni = [
-                {val: "gpt-4o-mini", label: "GPT-4o Mini"},
-                {val: "gpt-4o", label: "GPT-4o"}
-            ];
-        }
-
-        opzioni.forEach(opt => {
-            const el = document.createElement('option');
-            el.value = opt.val;
-            el.text = opt.label;
-            modelSelect.add(el);
-        });
-        if(userConfig.model) modelSelect.value = userConfig.model;
-    };
-
     window.aggiornaAnteprimaPreview = function() {
         userConfig.name = document.getElementById('avatarNameInput')?.value || "Nexus";
         userConfig.lang = document.getElementById('langSelect')?.value || "it";
+        userConfig.model = document.getElementById('modelSelect')?.value || "openrouter/free";
         userConfig.skin = document.getElementById('skinColorInput')?.value || "#e0a96d";
         userConfig.hair = document.getElementById('hairColorInput')?.value || "#2d3748";
         userConfig.eyes = document.getElementById('eyeColorInput')?.value || "#10b981";
@@ -841,8 +791,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     };
 
     window.salvaconfigInTempoReale = function() {
-        userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || "";
-        localStorage.setItem('avatarbox_v3_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
     };
 
     window.aggiornaVociTTS = function() {
@@ -884,7 +833,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     function caricaStoricoSidebar() {
         const historyList = document.getElementById('historyList');
         if(!historyList) return;
-        const saved = localStorage.getItem('avatarbox_v3_chats');
+        const saved = localStorage.getItem('avatarbox_free_chats');
         chatsSaved = saved ? JSON.parse(saved) : [];
 
         historyList.innerHTML = "";
@@ -910,7 +859,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
 
     window.cancellaCronologia = function() {
         if(confirm("Vuoi cancellare tutte le chat salvate?")) {
-            localStorage.removeItem('avatarbox_v3_chats');
+            localStorage.removeItem('avatarbox_free_chats');
             caricaStoricoSidebar();
         }
     };
@@ -918,16 +867,16 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     function salvaChatCorrente() {
         if(!currentChatId) currentChatId = Date.now();
         const chatData = { id: currentChatId, name: userConfig.name, config: userConfig, messages: chatHistory };
-        let saved = localStorage.getItem('avatarbox_v3_chats');
+        let saved = localStorage.getItem('avatarbox_free_chats');
         let list = saved ? JSON.parse(saved) : [];
         const index = list.findIndex(c => c.id === currentChatId);
         if(index >= 0) list[index] = chatData; else list.unshift(chatData);
-        localStorage.setItem('avatarbox_v3_chats', JSON.stringify(list));
+        localStorage.setItem('avatarbox_free_chats', JSON.stringify(list));
         caricaStoricoSidebar();
     }
 
     function ripristinaChat(id) {
-        const saved = localStorage.getItem('avatarbox_v3_chats');
+        const saved = localStorage.getItem('avatarbox_free_chats');
         if(!saved) return;
         const list = JSON.parse(saved);
         const chat = list.find(c => c.id === id);
@@ -941,7 +890,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         document.getElementById('settingsBtn').style.display = 'none';
         document.getElementById('main-content').innerHTML = `
             <div class="setup" id="setupScreen">
-                <div><h1>Impostazioni & Personalizzazione</h1><p>Modifica l'aspetto e il motore IA.</p></div>
+                <div><h1>Impostazioni & Personalizzazione</h1><p>Modifica l'aspetto ed il modello gratuito.</p></div>
                 <div class="grid">
                     <div class="preview-hero">
                         <div class="avatar-hero-box" id="preview-canvas-container"></div>
@@ -967,18 +916,17 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
                             <option value="de" ${userConfig.lang==='de'?'selected':''}>Deutsch</option>
                         </select>
                     </div>
-                    <div class="ig">
-                        <label>Fornitore IA</label>
-                        <select id="providerSelect" onchange="aggiornaModelliDisponibili()">
-                            <option value="free" ${userConfig.provider==='free'?'selected':''}>Modelli Liberi</option>
-                            <option value="openrouter" ${userConfig.provider==='openrouter'?'selected':''}>OpenRouter</option>
-                            <option value="groq" ${userConfig.provider==='groq'?'selected':''}>Groq</option>
-                            <option value="openai" ${userConfig.provider==='openai'?'selected':''}>OpenAI</option>
+                    <div class="ig full">
+                        <label>Modello IA Gratuito</label>
+                        <select id="modelSelect">
+                            <option value="openrouter/free" ${userConfig.model==='openrouter/free'?'selected':''}>🌟 OpenRouter Free Pool (Consigliato)</option>
+                            <option value="deepseek/deepseek-chat:free" ${userConfig.model==='deepseek/deepseek-chat:free'?'selected':''}>DeepSeek V3 Free</option>
+                            <option value="meta-llama/llama-3.3-70b-instruct:free" ${userConfig.model==='meta-llama/llama-3.3-70b-instruct:free'?'selected':''}>Llama 3.3 70B Free</option>
+                            <option value="meta-llama/llama-3.1-8b-instruct:free" ${userConfig.model==='meta-llama/llama-3.1-8b-instruct:free'?'selected':''}>Llama 3.1 8B Free</option>
+                            <option value="google/gemma-2-9b-it:free" ${userConfig.model==='google/gemma-2-9b-it:free'?'selected':''}>Gemma 2 9B Free</option>
                         </select>
                     </div>
-                    <div class="ig"><label>Modello IA</label><select id="modelSelect"></select></div>
-                    <div class="ig full"><label>API Key</label><input type="password" id="apiKeyInput" value="${userConfig.apiKey}" oninput="salvaconfigInTempoReale()"></div>
-                    <div class="ig"><label>Voce Sintetica</label><select id="voiceSelect"></select></div>
+                    <div class="ig full"><label>Voce Sintetica</label><select id="voiceSelect"></select></div>
                     <div class="ig full">
                         <label>Gadget 3D</label>
                         <div class="pills-group">
@@ -1039,7 +987,6 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             </div>
         `;
         applicaTemaSalvato();
-        aggiornaModelliDisponibili();
         initAvatarRenderer('preview-canvas-container', 110);
         aggiornaVociTTS();
         evidenziaSwatch('picker-skin', userConfig.skin);
@@ -1051,9 +998,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     window.riprendiChatDaImpostazioni = function() {
         userConfig.name = document.getElementById('avatarNameInput').value || "Nexus";
         userConfig.lang = document.getElementById('langSelect').value;
-        userConfig.provider = document.getElementById('providerSelect').value;
         userConfig.model = document.getElementById('modelSelect').value;
-        userConfig.apiKey = document.getElementById('apiKeyInput').value.trim();
         userConfig.skin = document.getElementById('skinColorInput').value;
         userConfig.hair = document.getElementById('hairColorInput').value;
         userConfig.eyes = document.getElementById('eyeColorInput').value;
@@ -1064,18 +1009,16 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             headphones: document.getElementById('gadgetHeadphones').checked,
             cap: document.getElementById('gadgetCap').checked
         };
-        localStorage.setItem('avatarbox_v3_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
         avviaAvatarBoxCloud(true);
     };
 
     window.avviaAvatarBoxCloud = function(isRestore = false) {
         userConfig.name = document.getElementById('avatarNameInput')?.value || userConfig.name;
         userConfig.lang = document.getElementById('langSelect')?.value || userConfig.lang;
-        userConfig.provider = document.getElementById('providerSelect')?.value || userConfig.provider;
         userConfig.model = document.getElementById('modelSelect')?.value || userConfig.model;
-        userConfig.apiKey = document.getElementById('apiKeyInput')?.value.trim() || userConfig.apiKey;
 
-        localStorage.setItem('avatarbox_v3_config', JSON.stringify(userConfig));
+        localStorage.setItem('avatarbox_free_config', JSON.stringify(userConfig));
         isAppRunning = true;
         document.getElementById('settingsBtn').style.display = 'inline-block';
         if(window.innerWidth < 768) {
@@ -1088,10 +1031,10 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             <div class="chat" id="chatBox">
                 <div class="msg">
                     <div class="avatar-box-chat" id="chat-canvas-container"></div>
-                    <div class="bubble"><strong>${userConfig.name}:</strong> Pronto! Connesso (${userConfig.model}).</div>
+                    <div class="bubble"><strong>${userConfig.name}:</strong> Ciao! Sono pronto. Modello attivo: ${userConfig.model}.</div>
                 </div>
             </div>
-            <div class="banner">✨ <strong>AvatarBox</strong> — Modalità attiva: ${userConfig.provider.toUpperCase()}</div>
+            <div class="banner">🌟 <strong>AvatarBox Free Pool</strong> — Nessuna API Key necessaria</div>
             <div class="interaction">
                 <button class="mic-btn" id="micBtn" onclick="toggleMicrofono()" title="Dettatura Vocale">🎤</button>
                 <textarea id="rispostaUtente" placeholder="Scrivi a ${userConfig.name}..."></textarea>
@@ -1159,7 +1102,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
     let recognition = null;
     window.toggleMicrofono = function() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) { alert("Riconoscimento vocale non supportato."); return; }
+        if (!SpeechRecognition) { alert("Riconoscimento vocale non supportato dal browser."); return; }
         const micBtn = document.getElementById('micBtn');
         const input = document.getElementById('rispostaUtente');
         if (recognition) { recognition.stop(); recognition = null; micBtn.classList.remove('listening'); return; }
@@ -1207,19 +1150,10 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         stopGenerazioneFlag = false;
         controllerAbilitato = new AbortController();
 
-        let endpoint = "https://openrouter.ai/api/v1/chat/completions";
-        let headers = { "Content-Type": "application/json" };
-
-        if(userConfig.provider === 'free') {
-            headers["Authorization"] = userConfig.apiKey ? `Bearer ${userConfig.apiKey}` : "Bearer sk-or-v1-public-free-access";
-            headers["HTTP-Referer"] = "https://github.com/avatarbox";
-            headers["X-Title"] = "AvatarBox";
-        } else {
-            headers["Authorization"] = `Bearer ${userConfig.apiKey}`;
-            if(userConfig.provider === 'groq') endpoint = "https://api.groq.com/openai/v1/chat/completions";
-            else if(userConfig.provider === 'openai') endpoint = "https://api.openai.com/v1/chat/completions";
-            else if(userConfig.provider === 'openrouter') endpoint = "https://openrouter.ai/api/v1/chat/completions";
-        }
+        const endpoint = "https://openrouter.ai/api/v1/chat/completions";
+        const headers = {
+            "Content-Type": "application/json"
+        };
 
         try {
             const response = await fetch(endpoint, {
@@ -1278,7 +1212,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         } catch(e) {
             if(e.name !== 'AbortError') {
                 const bubble = document.getElementById(aiBubbleId);
-                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore API: ${e.message}</span>`;
+                if(bubble) bubble.innerHTML = `<span style="color:#f87171;">Errore di connessione. Riprova tra un istante.</span>`;
             }
         } finally {
             if(sendBtn) sendBtn.style.display = 'inline-block';
@@ -1292,10 +1226,7 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
         if(savedConfig) {
             const av = document.getElementById('avatarNameInput'); if(av) av.value = userConfig.name;
             const lang = document.getElementById('langSelect'); if(lang) lang.value = userConfig.lang;
-            const prov = document.getElementById('providerSelect'); if(prov) prov.value = userConfig.provider;
-            aggiornaModelliDisponibili();
             const mod = document.getElementById('modelSelect'); if(mod) mod.value = userConfig.model;
-            const api = document.getElementById('apiKeyInput'); if(api) api.value = userConfig.apiKey;
             
             const skin = document.getElementById('skinColorInput'); if(skin) skin.value = userConfig.skin;
             const hair = document.getElementById('hairColorInput'); if(hair) hair.value = userConfig.hair;
@@ -1311,8 +1242,6 @@ button.primary:hover { background-color: var(--ac-hover); transform: translateY(
             evidenziaSwatch('picker-hair', userConfig.hair);
             evidenziaSwatch('picker-eyes', userConfig.eyes);
             evidenziaSwatch('picker-lips', userConfig.lips);
-        } else {
-            aggiornaModelliDisponibili();
         }
         initAvatarRenderer('preview-canvas-container', 110);
         caricaStoricoSidebar();
