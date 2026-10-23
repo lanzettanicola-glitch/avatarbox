@@ -11,12 +11,37 @@
 
         :root {
             --bg-base: #05070a;
-            --panel-bg: rgba(14, 18, 26, 0.94);
+            --panel-bg: rgba(14, 18, 26, 0.96);
             --panel-border: rgba(255, 255, 255, 0.08);
             --accent: #10b981;
             --accent-hover: #059669;
             --text-main: #f3f4f6;
             --text-sub: #9ca3af;
+        }
+
+        /* Scrollbar personalizzate ed eleganti */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.4) rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.4);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
 
         body {
@@ -123,7 +148,7 @@
             position: relative;
         }
 
-        /* Sidebar Storico Chat */
+        /* Sidebar Storico Chat con Scrollbar attiva */
         #sidebar {
             width: 240px;
             background: rgba(8, 11, 16, 0.7);
@@ -154,6 +179,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            padding-right: 4px;
         }
 
         .history-item {
@@ -195,7 +221,7 @@
             text-align: center;
             gap: 12px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding-right: 6px;
         }
 
         .setup-screen h1 {
@@ -296,6 +322,7 @@
             flex-shrink: 0;
         }
 
+        /* Contenitore Chat con Scrollbar dedicata */
         .chat-container {
             flex: 1;
             background: rgba(8, 11, 16, 0.7);
@@ -306,6 +333,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            scroll-behavior: smooth;
         }
 
         .message-row {
@@ -452,7 +480,7 @@
     </header>
 
     <div id="app-layout">
-        <!-- Sidebar Storico Chat -->
+        <!-- Sidebar Storico Chat con Scrollbar -->
         <div id="sidebar">
             <h3>💬 Cronologia Chat</h3>
             <button onclick="nuovaChat()" style="padding: 6px; font-size: 11.5px; margin-bottom: 4px; height: 32px;">+ Nuova Chat</button>
@@ -461,7 +489,7 @@
         </div>
 
         <div id="screen">
-            <div id="main-content">
+            <div id="main-content" style="height: 100%; display: flex; flex-direction: column;">
                 <div class="setup-screen" id="setupScreen">
                     <div>
                         <h1>Crea il tuo Avatar 3D</h1>
@@ -1105,7 +1133,6 @@
         window.speechSynthesis.speak(utterance);
     };
 
-    // Gestione Microfono (Speech Recognition)
     let recognition = null;
     window.toggleMicrofono = function() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1188,7 +1215,6 @@
 
             chatHistory.push({ role: "assistant", content: fullReply });
             
-            // Aggiungiamo il bottone audio cliccabile per aggirare le restrizioni mobile
             const bubble = document.getElementById(aiBubbleId);
             if(bubble) {
                 bubble.innerHTML = `
