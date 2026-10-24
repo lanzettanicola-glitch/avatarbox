@@ -2,15 +2,16 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>AvatarBox — Il tuo Avatar 3D & IA Locale</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
 :root{--bg:#05070a;--panel:rgba(14,18,26,.96);--bd:rgba(255,255,255,.08);--ac:#10b981;--ac2:#059669;--tx:#f3f4f6;--sub:#9ca3af}
 *{scrollbar-width:thin;scrollbar-color:rgba(16,185,129,.4) rgba(0,0,0,.2)}
-body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(16,185,129,.12),transparent 45%),radial-gradient(circle at 85% 85%,rgba(59,130,246,.08),transparent 45%);color:var(--tx);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;overflow-x:hidden}
-#game-container{width:100vw;height:100vh;max-width:1020px;max-height:740px;background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--bd);box-shadow:0 35px 70px rgba(0,0,0,.8);display:flex;flex-direction:column;overflow:hidden}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{background:var(--bg);background-image:radial-gradient(circle at 15% 15%,rgba(16,185,129,.12),transparent 45%),radial-gradient(circle at 85% 85%,rgba(59,130,246,.08),transparent 45%);color:var(--tx);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;margin:0;overflow-x:hidden}
+#game-container{width:100vw;height:100vh;height:100dvh;max-width:1020px;max-height:740px;background:var(--panel);backdrop-filter:blur(20px);border:1px solid var(--bd);box-shadow:0 35px 70px rgba(0,0,0,.8);display:flex;flex-direction:column;overflow:hidden}
 @media(min-width:768px){#game-container{border-radius:18px;width:1020px;height:740px}}
 header{background:rgba(10,14,20,.85);padding:14px 20px;font-size:13px;font-weight:600;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;font-family:'Fira Code',monospace;flex-shrink:0}
 .brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#fff}
@@ -47,7 +48,7 @@ input[type=color]{border:none;width:100%;height:26px;cursor:pointer;background:n
 .checks label{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--tx);font-size:11px}
 .preview{display:flex;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,.35);padding:10px;border-radius:10px;grid-column:1/-1;border:1px solid var(--bd);font-size:11.5px;color:var(--sub)}
 .abox{width:75px;height:75px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.12);background:#0d1117;flex-shrink:0}
-.abox canvas{display:block}
+.abox canvas{display:block;width:100%;height:100%}
 .chat-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .chat-top .abox{width:56px;height:56px}
 .chat{flex:1;background:rgba(8,11,16,.7);border:1px solid var(--bd);border-radius:12px;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
@@ -112,7 +113,7 @@ Le risposte sono generate da modelli di IA e possono essere errate o inadatte: n
 <script>
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'avatarbox_config', CHATS_KEY = 'avatarbox_chats', SKEY = 'avatarbox_key';
-const DEF = {name:"Nexus",lang:"it",provider:"free",model:"openai",apiKey:"",voice:"",pitch:1,rate:1,volume:1,autoSpeak:true,temp:0.7,maxTokens:512,persona:"",theme:"dark",fs:13,
+const DEF = {name:"",lang:"it",provider:"free",model:"openai",apiKey:"",voice:"",pitch:1,rate:1,volume:1,autoSpeak:true,temp:0.7,maxTokens:512,persona:"",theme:"dark",fs:13,
   skin:"#e0a96d",hair:"#2d3748",eyes:"#10b981",lips:"#f43f5e",
   gadgets:{glasses:false,visor:false,headphones:false,cap:false}};
 // Dopo aver pubblicato worker.js, incolla qui l'indirizzo del tuo Worker (es. https://avatarbox.nome.workers.dev)
@@ -126,9 +127,9 @@ const ENDPOINTS = {
 const MODELS = {
   portal:[["auto","Automatico (consigliato)"],["fast","Veloce"],["smart","Più intelligente"]],
   groq:[["llama-3.1-8b-instant","Llama 3.1 8B Instant"],["llama-3.3-70b-versatile","Llama 3.3 70B"]],
-  openrouter:[["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B (free)"],["deepseek/deepseek-chat","DeepSeek V3"]],
+  openrouter:[["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B (free)"],["deepseek/deepseek-r1:free","DeepSeek R1 (free, ragionamento)"],["deepseek/deepseek-chat","DeepSeek V3"]],
   gemini:[["gemini-2.0-flash","Gemini 2.0 Flash"],["gemini-2.5-flash","Gemini 2.5 Flash"]],
-  local:[["Qwen2.5-1.5B-Instruct-q4f16_1-MLC","Qwen 2.5 1.5B (consigliato / veloce) — ~1 GB"],["Llama-3-8B-Instruct-q4f16_1-MLC","Llama 3 8B (avanzato) — ~5 GB, ~6 GB di VRAM · Built with Meta Llama 3"],["Phi-3.5-mini-instruct-q4f16_1-MLC","Phi 3.5 Mini (leggero) — ~2,5 GB"]],
+  local:[["Qwen2.5-1.5B-Instruct-q4f16_1-MLC","Qwen 2.5 1.5B (consigliato / veloce) — ~1 GB"],["Llama-3-8B-Instruct-q4f16_1-MLC","Llama 3 8B (avanzato) — ~5 GB, ~6 GB di VRAM · Built with Meta Llama 3"],["Phi-3.5-mini-instruct-q4f16_1-MLC","Phi 3.5 Mini (leggero) — ~2,5 GB"],["DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC","DeepSeek R1 Distill Qwen 7B (libero, ragionamento) — ~5 GB"],["DeepSeek-R1-Distill-Llama-8B-q4f16_1-MLC","DeepSeek R1 Distill Llama 8B (libero, ragionamento) — ~5 GB"]],
 };
 const LOCALE = {it:'it-IT',en:'en-US',es:'es-ES',fr:'fr-FR',de:'de-DE'};
 const PROMPTS = {
@@ -203,7 +204,8 @@ function initRenderer(id, size) {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, 1, .1, 1000); camera.position.z = 3.6;
   renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-  renderer.setSize(size, size);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(size, size, false);
   box.innerHTML = ""; box.appendChild(renderer.domElement);
   scene.add(new THREE.AmbientLight(0xffffff, .9));
   const pl = new THREE.PointLight(0xffffff, 1.2); pl.position.set(5,5,5); scene.add(pl);
@@ -252,8 +254,8 @@ function renderSetup(isSettings) {
     <div id="notice" class="ig" style="display:none;font-size:11.5px;color:var(--tx)"></div>
     <div class="grid">
       <div class="preview"><div class="abox" id="prevBox"></div><div><strong style="color:#fff">Anteprima Live 3D</strong><br>Gira in tempo reale.</div></div>
-      <div class="ig"><label>Nome Avatar</label><input type="text" id="f_name"></div>
-      <div class="ig"><label>Lingua IA</label><select id="f_lang">
+      <div class="ig"><label>Nome Avatar</label><input type="text" id="f_name" placeholder="Scegli un nome…"></div>
+      <div class="ig"><label>Lingua dell'app AvatarBox</label><select id="f_lang">
         <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option></select></div>
       <div class="ig full"><label>Come vuoi usare l'IA</label><select id="f_provider">
         <option value="portal">Portale AvatarBox (veloce, gratuito)</option><option value="local">IA locale nel browser (privata, scarica il modello)</option>
@@ -311,7 +313,7 @@ function fillModels() {
 
 function readForm() {
   if (!$('f_name')) return;
-  cfg.name = $('f_name').value.trim() || "Nexus";
+  cfg.name = $('f_name').value.trim() || "Avatar";
   cfg.lang = $('f_lang').value; cfg.provider = $('f_provider').value; cfg.apiKey = $('f_key').value.trim();
   cfg.model = ($('f_mtext').value.trim() && !['local','portal'].includes(cfg.provider)) ? $('f_mtext').value.trim() : $('f_model').value;
   ['skin','hair','eyes','lips'].forEach(k => cfg[k] = $('c_'+k).value);
@@ -420,7 +422,7 @@ function openChat(restore) {
   snapshotAvatar();
   $('settingsBtn').style.display = 'inline-block';
   $('main-content').innerHTML = `
-    <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name)}</strong><br><span id="modeInfo" style="font-size:11px;color:var(--sub)">${PNAME[cfg.provider]}</span><div class="pb" style="${cfg.provider === 'local' ? '' : 'display:none'}"><i id="pbar"></i></div></div><div class="tools"><button class="icon-btn" id="regenBtn">↻ Rigenera</button><button class="icon-btn" id="muteBtn" aria-label="Voce on/off">🔊</button><button class="icon-btn" id="clearChatBtn">🗑 Svuota</button></div></div>
+    <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name || 'Avatar')}</strong><br><span id="modeInfo" style="font-size:11px;color:var(--sub)">${PNAME[cfg.provider]}</span><div class="pb" style="${cfg.provider === 'local' ? '' : 'display:none'}"><i id="pbar"></i></div></div><div class="tools"><button class="icon-btn" id="regenBtn">↻ Rigenera</button><button class="icon-btn" id="muteBtn" aria-label="Voce on/off">🔊</button><button class="icon-btn" id="clearChatBtn">🗑 Svuota</button></div></div>
     <div class="chat" id="chatBox" role="log" aria-live="polite"></div>
     
     <div class="input-row">
@@ -429,13 +431,13 @@ function openChat(restore) {
       <button id="sendBtn">Invia</button><button class="stop" id="stopBtn">Interrompi</button>
     </div>`;
   $('liveBox').style.cssText = "width:56px;height:56px";
-  $('userInput').placeholder = "Scrivi a " + cfg.name + "...";
+  $('userInput').placeholder = "Scrivi a " + (cfg.name || 'Avatar') + "...";
   $('status').innerHTML = '<span class="dot"></span>AvatarBox Attivo · ' + PNAME[cfg.provider];
   initRenderer('liveBox', 56);
 
   const sys = PROMPTS[cfg.lang] || PROMPTS.it;
-  if (chatHistory[0] && chatHistory[0].role === 'system') chatHistory[0].content = (sys(cfg.name) + (cfg.persona ? ' ' + cfg.persona : ''));
-  else chatHistory.unshift({role:"system", content: (sys(cfg.name) + (cfg.persona ? ' ' + cfg.persona : ''))});
+  if (chatHistory[0] && chatHistory[0].role === 'system') chatHistory[0].content = (sys(cfg.name || 'Avatar') + (cfg.persona ? ' ' + cfg.persona : ''));
+  else chatHistory.unshift({role:"system", content: (sys(cfg.name || 'Avatar') + (cfg.persona ? ' ' + cfg.persona : ''))});
 
   if (restore) renderChat();
   else addMsg('assistant', cfg.provider === 'local' ? 'IA locale: carico il modello nel browser (la prima volta può richiedere qualche minuto).' : 'Pronto! Connesso a ' + PNAME[cfg.provider] + '.');
