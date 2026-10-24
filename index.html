@@ -104,7 +104,7 @@ input[type=range]{width:100%;accent-color:var(--ac)}
 <h4>Crediti e licenze</h4>
 Interfaccia 3D: Three.js (MIT). Esecuzione IA nel browser: WebLLM (Apache 2.0). Modelli: Qwen 2.5 (Apache 2.0), Phi 3.5 Mini (MIT), Llama 3 8B: <b>Built with Meta Llama 3</b>. Meta Llama 3 is licensed under the Meta Llama 3 Community License, Copyright © Meta Platforms, Inc. All Rights Reserved. Font: Inter e Fira Code (OFL).
 <h4>Privacy</h4>
-Le conversazioni e le impostazioni restano nel tuo browser (localStorage) e non vengono inviate a un server di AvatarBox. Per funzionare la pagina carica librerie, font e pesi dei modelli da servizi esterni (cdnjs, esm.run, Google Fonts, Hugging Face), che possono vedere il tuo indirizzo IP. Puoi cancellare chat e modelli dalle impostazioni.
+Chat e impostazioni restano nel tuo browser (localStorage). Con l'IA locale i messaggi non lasciano il dispositivo; con il Portale o una chiave personale vengono inviati al fornitore del modello (Groq, Google o OpenRouter) per generare la risposta, e i piani gratuiti possono usarli per migliorare i servizi. Per funzionare la pagina carica librerie, font e pesi dei modelli da servizi esterni (cdnjs, esm.run, Google Fonts, Hugging Face), che possono vedere il tuo indirizzo IP. Puoi cancellare chat e modelli dalle impostazioni.
 <h4>Termini</h4>
 Le risposte sono generate da modelli di IA e possono essere errate o inadatte: non sono consulenza medica, legale o finanziaria. Non usare il servizio per attività illecite.
 <p style="color:var(--sub)">Testo informativo di esempio: fallo verificare da un legale prima dell'uso commerciale.</p>
@@ -115,7 +115,19 @@ const CFG_KEY = 'avatarbox_config', CHATS_KEY = 'avatarbox_chats', SKEY = 'avata
 const DEF = {name:"Nexus",lang:"it",provider:"free",model:"openai",apiKey:"",voice:"",pitch:1,rate:1,volume:1,autoSpeak:true,temp:0.7,maxTokens:512,persona:"",theme:"dark",fs:13,
   skin:"#e0a96d",hair:"#2d3748",eyes:"#10b981",lips:"#f43f5e",
   gadgets:{glasses:false,visor:false,headphones:false,cap:false}};
+// Dopo aver pubblicato worker.js, incolla qui l'indirizzo del tuo Worker (es. https://avatarbox.nome.workers.dev)
+const GATEWAY_URL = "https://IL-TUO-WORKER.workers.dev";
+const PNAME = {portal:"Portale AvatarBox", local:"IA locale (WebGPU)", groq:"Groq (tua chiave)", openrouter:"OpenRouter (tua chiave)", gemini:"Gemini (tua chiave)"};
+const ENDPOINTS = {
+  groq:"https://api.groq.com/openai/v1/chat/completions",
+  openrouter:"https://openrouter.ai/api/v1/chat/completions",
+  gemini:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+};
 const MODELS = {
+  portal:[["auto","Automatico (consigliato)"],["fast","Veloce"],["smart","Più intelligente"]],
+  groq:[["llama-3.1-8b-instant","Llama 3.1 8B Instant"],["llama-3.3-70b-versatile","Llama 3.3 70B"]],
+  openrouter:[["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B (free)"],["deepseek/deepseek-chat","DeepSeek V3"]],
+  gemini:[["gemini-2.0-flash","Gemini 2.0 Flash"],["gemini-2.5-flash","Gemini 2.5 Flash"]],
   local:[["Qwen2.5-1.5B-Instruct-q4f16_1-MLC","Qwen 2.5 1.5B (consigliato / veloce) — ~1 GB"],["Llama-3-8B-Instruct-q4f16_1-MLC","Llama 3 8B (avanzato) — ~5 GB, ~6 GB di VRAM · Built with Meta Llama 3"],["Phi-3.5-mini-instruct-q4f16_1-MLC","Phi 3.5 Mini (leggero) — ~2,5 GB"]],
 };
 const LOCALE = {it:'it-IT',en:'en-US',es:'es-ES',fr:'fr-FR',de:'de-DE'};
@@ -131,9 +143,9 @@ let cfg = JSON.parse(JSON.stringify(DEF));
 try { const s = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); Object.assign(cfg, s); cfg.gadgets = {...DEF.gadgets, ...s.gadgets}; } catch(e) {}
 try { cfg.apiKey = sessionStorage.getItem(SKEY) || ''; } catch(e) {}
 
-cfg.provider = 'local';
+if (!MODELS[cfg.provider]) cfg.provider = GATEWAY_URL.includes('IL-TUO') ? 'local' : 'portal';
+if (['local','portal'].includes(cfg.provider) && !MODELS[cfg.provider].some(m => m[0] === cfg.model)) cfg.model = MODELS[cfg.provider][0][0];
 applyPrefs();
-if (!MODELS.local.some(m => m[0] === cfg.model)) cfg.model = MODELS.local[0][0];
 let chatHistory = [], currentChatId = null;
 let renderer = null, scene = null, camera = null, group = null, animId = null;
 let running = false, speaking = false, stopFlag = false, abortCtl = null, avatarSnap = '', recognition = null;
@@ -243,7 +255,11 @@ function renderSetup(isSettings) {
       <div class="ig"><label>Nome Avatar</label><input type="text" id="f_name"></div>
       <div class="ig"><label>Lingua IA</label><select id="f_lang">
         <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option></select></div>
-      <div class="ig full"><label>Modello IA Locale (WebGPU)</label><select id="f_model"></select></div>
+      <div class="ig full"><label>Come vuoi usare l'IA</label><select id="f_provider">
+        <option value="portal">Portale AvatarBox (veloce, gratuito)</option><option value="local">IA locale nel browser (privata, scarica il modello)</option>
+        <option value="groq">Mia chiave Groq</option><option value="openrouter">Mia chiave OpenRouter</option><option value="gemini">Mia chiave Google Gemini</option></select></div>
+      <div class="ig full"><label>Modello</label><select id="f_model"></select></div>
+      <div class="ig full" id="rowKey"><label>API key personale (resta solo in questa sessione)</label><input type="password" id="f_key" autocomplete="off"><label>ID modello personalizzato (facoltativo)</label><input type="text" id="f_mtext" placeholder="vuoto = usa quello della lista"></div>
       <div class="ig"><label>Voce Sintetica</label><select id="f_voice"></select></div>
       <div class="ig"><label>Velocità voce</label><input type="range" id="f_rate" min="0.6" max="1.6" step="0.1"></div>
       <div class="ig"><label>Volume voce</label><input type="range" id="f_vol" min="0" max="1" step="0.1"></div>
@@ -264,16 +280,17 @@ function renderSetup(isSettings) {
     </div>
     <div style="padding-bottom:20px"><button id="goBtn" style="width:100%;height:48px">${isSettings ? 'Salva & Torna alla Chat' : 'Avvia AvatarBox'}</button></div>
   </div>`;
-  $('f_name').value = cfg.name; $('f_lang').value = cfg.lang;
+  $('f_name').value = cfg.name; $('f_lang').value = cfg.lang; $('f_provider').value = cfg.provider; $('f_key').value = cfg.apiKey;
   ['glasses','visor','headphones','cap'].forEach(k => $('g_'+k).checked = cfg.gadgets[k]);
   ['skin','hair','eyes','lips'].forEach(k => $('c_'+k).value = cfg[k]);
   fillModels(); fillVoices();
   $('f_rate').value = cfg.rate; $('f_vol').value = cfg.volume; $('f_temp').value = cfg.temp; $('f_max').value = cfg.maxTokens;
   $('f_auto').checked = cfg.autoSpeak; $('f_persona').value = cfg.persona;
   $('f_theme').value = cfg.theme; $('f_fs').value = cfg.fs;
+  $('f_provider').onchange = () => { cfg.model = ''; $('f_mtext').value = ''; fillModels(); toggleKey(); }; toggleKey();
   $('f_theme').onchange = $('f_fs').onchange = () => { readForm(); };
   const nt = $('notice');
-  if (!navigator.gpu) { nt.style.display = 'block'; nt.textContent = "⚠️ Questo browser non supporta WebGPU: l'IA locale non partirà. Usa Chrome o Edge aggiornati su computer o su un Android recente."; }
+  if (!navigator.gpu) { nt.style.display = 'block'; nt.textContent = "⚠️ Questo browser non supporta WebGPU: l'IA locale non partirà. Usa Chrome o Edge aggiornati su computer o su un Android recente, oppure scegli il Portale o una tua chiave."; }
   else if (!localStorage.getItem('avatarbox_seen')) { nt.style.display = 'block'; nt.textContent = "👋 Benvenuto! Personalizza l'avatar, scegli un modello e premi Avvia. Al primo avvio il modello viene scaricato nel tuo browser (da circa 1 a 5 GB, una sola volta) e poi resta salvato qui."; }
   renderModelMgr();
   $('testVoice').onclick = () => { readForm(); speak({it:'Ciao, sono ',en:'Hi, I am ',es:'Hola, soy ',fr:'Salut, je suis ',de:'Hallo, ich bin '}[cfg.lang] + cfg.name); };
@@ -285,16 +302,18 @@ function renderSetup(isSettings) {
   initRenderer('prevBox', 75);
 }
 
+function toggleKey() { $('rowKey').style.display = ['local','portal'].includes($('f_provider').value) ? 'none' : 'flex'; }
 function fillModels() {
-  const p = 'local', sel = $('f_model'); sel.innerHTML = "";
+  const p = $('f_provider').value, sel = $('f_model'); sel.innerHTML = "";
   MODELS[p].forEach(([v,l]) => sel.add(new Option(l, v)));
-  if (MODELS[p].some(m => m[0] === cfg.model)) sel.value = cfg.model;
+  if (MODELS[p].some(m => m[0] === cfg.model)) sel.value = cfg.model; else if (cfg.model && $('f_mtext') && !['local','portal'].includes(p)) $('f_mtext').value = cfg.model;
 }
 
 function readForm() {
   if (!$('f_name')) return;
   cfg.name = $('f_name').value.trim() || "Nexus";
-  cfg.lang = $('f_lang').value; cfg.model = $('f_model').value;
+  cfg.lang = $('f_lang').value; cfg.provider = $('f_provider').value; cfg.apiKey = $('f_key').value.trim();
+  cfg.model = ($('f_mtext').value.trim() && !['local','portal'].includes(cfg.provider)) ? $('f_mtext').value.trim() : $('f_model').value;
   ['skin','hair','eyes','lips'].forEach(k => cfg[k] = $('c_'+k).value);
   ['glasses','visor','headphones','cap'].forEach(k => cfg.gadgets[k] = $('g_'+k).checked);
   cfg.rate = parseFloat($('f_rate').value); cfg.volume = parseFloat($('f_vol').value); cfg.temp = parseFloat($('f_temp').value);
@@ -388,7 +407,9 @@ function restoreChat(id) {
 /* ---------- Chat ---------- */
 function startChat() {
   readForm(); pickVoice();
-  if (!navigator.gpu) { alert("Questo browser non supporta WebGPU: usa Chrome o Edge aggiornati."); return; }
+  if (cfg.provider === 'local' && !navigator.gpu) { alert("Questo browser non supporta WebGPU: usa Chrome o Edge aggiornati, oppure scegli il Portale."); return; }
+  if (cfg.provider === 'portal' && GATEWAY_URL.includes('IL-TUO')) { alert("Il portale non è ancora configurato: imposta GATEWAY_URL nel file, oppure scegli l'IA locale o una tua chiave."); return; }
+  if (!['local','portal'].includes(cfg.provider) && !cfg.apiKey) { alert("Inserisci la tua API key."); return; }
   saveCfg();
   try { localStorage.setItem('avatarbox_seen', '1'); if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e) {}
   openChat(chatHistory.length > 0);
@@ -399,7 +420,7 @@ function openChat(restore) {
   snapshotAvatar();
   $('settingsBtn').style.display = 'inline-block';
   $('main-content').innerHTML = `
-    <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name)}</strong><br><span id="modeInfo" style="font-size:11px;color:var(--sub)">IA locale (WebGPU)</span><div class="pb"><i id="pbar"></i></div></div><div class="tools"><button class="icon-btn" id="regenBtn">↻ Rigenera</button><button class="icon-btn" id="muteBtn" aria-label="Voce on/off">🔊</button><button class="icon-btn" id="clearChatBtn">🗑 Svuota</button></div></div>
+    <div class="chat-top"><div class="abox" id="liveBox"></div><div><strong>${esc(cfg.name)}</strong><br><span id="modeInfo" style="font-size:11px;color:var(--sub)">${PNAME[cfg.provider]}</span><div class="pb" style="${cfg.provider === 'local' ? '' : 'display:none'}"><i id="pbar"></i></div></div><div class="tools"><button class="icon-btn" id="regenBtn">↻ Rigenera</button><button class="icon-btn" id="muteBtn" aria-label="Voce on/off">🔊</button><button class="icon-btn" id="clearChatBtn">🗑 Svuota</button></div></div>
     <div class="chat" id="chatBox" role="log" aria-live="polite"></div>
     
     <div class="input-row">
@@ -409,7 +430,7 @@ function openChat(restore) {
     </div>`;
   $('liveBox').style.cssText = "width:56px;height:56px";
   $('userInput').placeholder = "Scrivi a " + cfg.name + "...";
-  $('status').innerHTML = '<span class="dot"></span>AvatarBox Attivo · IA locale, nessun costo server';
+  $('status').innerHTML = '<span class="dot"></span>AvatarBox Attivo · ' + PNAME[cfg.provider];
   initRenderer('liveBox', 56);
 
   const sys = PROMPTS[cfg.lang] || PROMPTS.it;
@@ -417,7 +438,7 @@ function openChat(restore) {
   else chatHistory.unshift({role:"system", content: (sys(cfg.name) + (cfg.persona ? ' ' + cfg.persona : ''))});
 
   if (restore) renderChat();
-  else addMsg('assistant', cfg.provider === 'local' ? 'IA locale: carico il modello nel browser (la prima volta può richiedere qualche minuto).' : '');
+  else addMsg('assistant', cfg.provider === 'local' ? 'IA locale: carico il modello nel browser (la prima volta può richiedere qualche minuto).' : 'Pronto! Connesso a ' + PNAME[cfg.provider] + '.');
 
   $('sendBtn').onclick = sendMessage; if (cfg.provider === 'local') loadLocal();
   $('stopBtn').onclick = () => { stopFlag = true; if (abortCtl) abortCtl.abort(); if (engine && cfg.provider === 'local') engine.interruptGenerate(); stopSpeech(); };
@@ -602,17 +623,45 @@ async function sendMessage() {
       setBubble(bubble, 'assistant', full);
       $('chatBox').scrollTop = $('chatBox').scrollHeight;
     };
-    await ensureEngine();
-    for await (const ch of await engine.chat.completions.create({messages: trimmed(), stream: true, temperature: cfg.temp, max_tokens: cfg.maxTokens})) {
-      if (stopFlag) break;
-      push(ch.choices[0]?.delta?.content || "");
+    if (cfg.provider === 'local') {
+      await ensureEngine();
+      for await (const ch of await engine.chat.completions.create({messages: trimmed(), stream: true, temperature: cfg.temp, max_tokens: cfg.maxTokens})) {
+        if (stopFlag) break;
+        push(ch.choices[0]?.delta?.content || "");
+      }
+    } else {
+      const url = cfg.provider === 'portal' ? GATEWAY_URL.replace(/\/$/, '') + '/chat' : ENDPOINTS[cfg.provider];
+      const headers = {"Content-Type": "application/json"};
+      if (cfg.provider !== 'portal') headers.Authorization = "Bearer " + cfg.apiKey;
+      const res = await fetch(url, {method: "POST", headers, signal: abortCtl.signal,
+        body: JSON.stringify({model: cfg.model, messages: trimmed(), stream: true, temperature: cfg.temp, max_tokens: cfg.maxTokens})});
+      if (!res.ok) { const er = new Error((await res.text()).slice(0,200) || res.statusText); er.status = res.status; throw er; }
+      const reader = res.body.getReader(), dec = new TextDecoder("utf-8");
+      let buf = "";
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, {stream: true});
+        const lines = buf.split("\n"); buf = lines.pop();
+        for (const l of lines) {
+          const t = l.trim();
+          if (!t.startsWith("data:")) continue;
+          const d = t.slice(5).trim();
+          if (d === "[DONE]") continue;
+          let delta = ""; try { delta = JSON.parse(d).choices?.[0]?.delta?.content || ""; } catch(e) {}
+          if (delta) push(delta);
+        }
+      }
     }
     finish();
   } catch(e) {
     if (e.name === 'AbortError') finish();
     else {
       chatHistory.pop();
-      const msg = "Errore dell'IA locale: " + e.message + (/memory|out of|lost|alloc/i.test(e.message) ? " — prova un modello più piccolo (Qwen 2.5 1.5B)." : "");
+      const msg = cfg.provider === 'local' ? "Errore dell'IA locale: " + e.message + (/memory|out of|lost|alloc/i.test(e.message) ? " — prova un modello più piccolo." : "")
+        : e.status === 401 || e.status === 403 ? "Chiave non valida o accesso negato."
+        : e.status === 429 ? "Limite di richieste raggiunto: attendi un momento o cambia modello."
+        : e.status ? `Errore del servizio (${e.status}): ${e.message}` : "Rete non raggiungibile o servizio bloccato. Prova l'IA locale.";
       bubble.textContent = "";
       const s = document.createElement('span'); s.style.color = "#f87171"; s.textContent = msg; bubble.appendChild(s);
       const rt = document.createElement('button'); rt.className = 'tts'; rt.textContent = '↻ Riprova';
